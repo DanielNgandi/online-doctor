@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `doctor` ADD COLUMN `avgRating` DOUBLE NULL DEFAULT 0,
+    ADD COLUMN `hospital` VARCHAR(191) NULL,
+    ADD COLUMN `photo` VARCHAR(191) NULL,
+    ADD COLUMN `totalPatients` INTEGER NULL DEFAULT 0,
+    ADD COLUMN `totalRating` INTEGER NULL DEFAULT 0;
