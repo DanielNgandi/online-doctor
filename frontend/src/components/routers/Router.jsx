@@ -8,6 +8,7 @@ import Contact from '../pages/Contact'
 import Doctors from '../pages/Doctors/Doctors'
 import DoctorDetail from '../pages/Doctors/DoctorsDetail'
 import {Routes,Route} from 'react-router-dom'
+import BookAppointment from "../pages/appointment/appointment";
 import AdminRoute from './AdminRoute'
 function Router() {
   return <Routes>
@@ -19,15 +20,9 @@ function Router() {
     <Route path='/register' element={<Signup/>}/>
     <Route path='/services' element={<Services/>}/>
     <Route path='/contacts' element={<Contact/>}/>
-    <Route 
-  path="/add-doctor" 
-  element={
-    <AdminRoute>
-      <AdminAddDoctor />
-    </AdminRoute>
-  } 
-/>
-  </Routes>
-}
+    <Route path="/add-doctor"element={<AdminRoute><AdminAddDoctor /></AdminRoute> }/> 
+    <Route path="/book-appointment" element={<BookAppointment />} />
+    </Routes>}
+ 
 
 export default Router

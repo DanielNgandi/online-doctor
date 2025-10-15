@@ -18,7 +18,7 @@ export const register = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        role: role || "patient",
+        role: role.toLowerCase()  
       },
     });
 

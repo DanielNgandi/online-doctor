@@ -13,9 +13,15 @@ export const getAppointments = async (req, res) => {
 
 export const createAppointment = async (req, res) => {
   const { date, reason, patientId, doctorId } = req.body;
+  console.log("Creating appointment with data:", { date, reason, patientId, doctorId });
   try {
     const appointment = await prisma.appointment.create({
-      data: { date: new Date(date), reason, patientId, doctorId },
+      data: { 
+        date: new Date(date), 
+        reason, 
+        patientId, 
+        doctorId 
+      },
     });
     res.status(201).json(appointment);
   } catch (error) {

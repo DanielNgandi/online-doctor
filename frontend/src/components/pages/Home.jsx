@@ -29,12 +29,11 @@ const user = JSON.parse(localStorage.getItem("user"));
                   we save life by helping patients access medical care easily
                 </h1>
                 <p className="text_para">
-                  Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                  Reiciendis delectus, ex quasi iste sint nesciunt eos eveniet
-                  magni voluptates veritatis consectetur labore facilis facere,
-                  porro quod animi. Enim, fuga dicta!
-                </p>
-                <button className="btn">request an Appointment</button>
+          Book an appointment with a qualified doctor at your convenience.
+        </p>
+        <Link to="/book-appointment">
+  <button className="btn">Request an Appointment</button>
+</Link>
               </div>
               {/* hero counter */}
               <div className="mt-[300px] lg:mt-[70px] flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-[30px]">

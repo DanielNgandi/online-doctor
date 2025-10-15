@@ -30,6 +30,11 @@ CREATE TABLE `Doctor` (
     `name` VARCHAR(191) NOT NULL,
     `specialty` VARCHAR(191) NOT NULL,
     `contact` VARCHAR(191) NOT NULL,
+    `photo` VARCHAR(191) NULL,
+    `avgRating` DOUBLE NULL DEFAULT 0,
+    `totalRating` INTEGER NULL DEFAULT 0,
+    `totalPatients` INTEGER NULL DEFAULT 0,
+    `hospital` VARCHAR(191) NULL,
     `userId` INTEGER NULL,
 
     UNIQUE INDEX `Doctor_userId_key`(`userId`),

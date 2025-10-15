@@ -32,7 +32,7 @@ function Login() {
         alert("Login successful!");
         console.log("User:", data.user);
 
-        if (data.user.role === "admin") {
+        if (data.user.role.toLowerCase() === "admin") {
           navigate("/add-doctor");
         } else if (data.user.role === "doctor") {
           navigate("/home");
