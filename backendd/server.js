@@ -24,9 +24,10 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/patient", patientRoutes);
 //app.use("/api/doctors", doctorRoutes);
+app.use("/api/doctors", doctorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/appointments", appointmentRoutes);
-app.use("/api/doctors", doctorRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("API is running...");

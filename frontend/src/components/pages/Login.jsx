@@ -1,7 +1,8 @@
 import { useState } from "react"
 import {Link, useNavigate} from 'react-router-dom'
-
+import { useAuth } from '../context/AuthContext';
 function Login() {
+  const { login } = useAuth();
   const [formData,setFormData]=useState({
     email:'',
     password:''
@@ -25,9 +26,10 @@ function Login() {
       const data = await res.json();
 
       if (res.ok) {
+        login(data.user, data.token);
         // ✅ save token in localStorage for authenticated requests
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        //localStorage.setItem("token", data.token);
+        //localStorage.setItem("user", JSON.stringify(data.user));
 
         alert("Login successful!");
         console.log("User:", data.user);
