@@ -33,10 +33,12 @@ function Header() {
   //const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const getAppointmentPath = () => {
-    if (user?.role === "patient") {
+     if (user?.role === "patient") {
       return "/patient/my-appointments";
     } else if (user?.role === "doctor") {
       return "/doctor/my-appointments";
+    } else if (user?.role === "admin") {
+      return "/admin/appointments";
     }
     return "/appointments";
   };

@@ -41,21 +41,141 @@ export const addDoctor = async (req, res) => {
 // Get all doctors
 export const getDoctors = async (req, res) => {
   try {
-    const doctors = await prisma.user.findMany({ where: { role: "doctor" } });
+    const doctors = await prisma.doctor.findMany({
+      include: {
+        user: {
+          select: {
+            email: true,
+            username: true
+          }
+        }
+      }
+    });
     res.json(doctors);
   } catch (err) {
+    console.error("Error fetching doctors:", err);
     res.status(500).json({ message: "Error fetching doctors" });
   }
 };
 
-// Get all appointments
+// Get all appointments for admin
 export const getAllAppointments = async (req, res) => {
   try {
     const appointments = await prisma.appointment.findMany({
-      include: { doctor: true, patient: true },
+      include: {
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialty: true,
+            contact: true,
+            hospital: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
+        },
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            contact: true,
+            gender: true,
+            dob: true,
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        date: 'desc'
+      }
     });
-    res.json(appointments);
+
+    // Transform the data to make it easier to use in frontend
+    const transformedAppointments = appointments.map(appointment => ({
+      id: appointment.id,
+      date: appointment.date,
+      reason: appointment.reason,
+      createdAt: appointment.createdAt,
+      doctor: {
+        id: appointment.doctor.id,
+        name: appointment.doctor.name,
+        specialty: appointment.doctor.specialty,
+        contact: appointment.doctor.contact,
+        hospital: appointment.doctor.hospital,
+        email: appointment.doctor.user?.email
+      },
+      patient: {
+        id: appointment.patient.id,
+        name: appointment.patient.name,
+        contact: appointment.patient.contact,
+        gender: appointment.patient.gender,
+        dob: appointment.patient.dob,
+        email: appointment.patient.user?.email
+      }
+    }));
+
+    res.json({
+      success: true,
+      appointments: transformedAppointments
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching appointments" });
+    console.error("Error fetching appointments:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching appointments",
+      error: err.message 
+    });
+  }
+};
+
+// Get appointment statistics for admin
+export const getAppointmentStats = async (req, res) => {
+  try {
+    const totalAppointments = await prisma.appointment.count();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayAppointments = await prisma.appointment.count({
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow
+        }
+      }
+    });
+
+    const upcomingAppointments = await prisma.appointment.count({
+      where: {
+        date: {
+          gte: new Date()
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        total: totalAppointments,
+        today: todayAppointments,
+        upcoming: upcomingAppointments
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching appointment stats:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching appointment statistics",
+      error: err.message 
+    });
   }
 };

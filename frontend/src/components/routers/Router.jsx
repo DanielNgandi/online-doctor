@@ -8,6 +8,7 @@ import AdminAddDoctor from '../pages/Admin/AdminAddDoctor'
 import Contact from '../pages/Contact'
 import Doctors from '../pages/Doctors/Doctors'
 import DoctorDetail from '../pages/Doctors/DoctorsDetail'
+import AdminAppointments from '../pages/Admin/AdminAppointments';
 import PatientProfileSetup from '../pages/patients/PatientProfileSetup'
 import DoctorProfile from '../pages/Doctors/DoctorProfile';
 import BookAppointment from "../pages/appointment/appointment";
@@ -28,6 +29,7 @@ function Router() {
     <Route path="/book-appointment" element={<BookAppointment />} />
     <Route path="/doctor-profile" element={<DoctorProfile />} />
     <Route path="/doctor/my-appointments" element={<DoctorAppointments />} />
+    <Route path="/admin/appointments" element={<AdminAppointments />} />
     <Route path="/patient/my-appointments" element={<PatientAppointments />} /> 
     <Route path="/patient-profile" element={<PatientProfileSetup />} />
     </Routes>}
