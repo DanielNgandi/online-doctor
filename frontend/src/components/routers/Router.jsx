@@ -15,6 +15,7 @@ import BookAppointment from "../pages/appointment/appointment";
 import DoctorAppointments from '../pages/Doctors/DoctorAppointments';
 import PatientAppointments from '../pages/patients/PatientAppointments';
 import AdminRoute from './AdminRoute'
+import AdminProfile from '../pages/Admin/AdminProfile'; 
 function Router() {
   return <Routes>
     <Route path='/' element={<Home/>}/>
@@ -32,6 +33,7 @@ function Router() {
     <Route path="/admin/appointments" element={<AdminAppointments />} />
     <Route path="/patient/my-appointments" element={<PatientAppointments />} /> 
     <Route path="/patient-profile" element={<PatientProfileSetup />} />
+    <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
     </Routes>}
  
 

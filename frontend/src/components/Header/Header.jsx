@@ -43,6 +43,17 @@ function Header() {
     return "/appointments";
   };
 
+   const getProfilePath = () => {
+    if (user?.role === "patient") {
+      return "/patient-profile";
+    } else if (user?.role === "doctor") {
+      return "/doctor-profile";
+    } else if (user?.role === "admin") {
+      return "/admin/profile"; // FIXED: Changed to admin profile path
+    }
+    return "/profile";
+  };
+
   const handleStickyHeader = () => {
     window.addEventListener("scroll", () => {
       if (
@@ -134,7 +145,7 @@ function Header() {
                   {/* Profile links */}
                   <li>
                     <NavLink
-                      to={user.role === 'patient' ? "/patient-profile" : "/doctor-profile"}
+                      to={getProfilePath()} 
                       className={(navClass) =>
                         navClass.isActive
                           ? "text-primaryColor text-[16px] leading-7 font-[600]"
@@ -156,7 +167,7 @@ function Header() {
               <div className="flex items-center gap-4">
                 {/* User Profile with avatar */}
                 <Link 
-                  to={user.role === "patient" ? "/patient-profile" : "/doctor-profile"} 
+                  to={getProfilePath()}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
                   <figure className="w-[35px] h-[35px] rounded-full cursor-pointer bg-primaryColor flex items-center justify-center border-2 border-white shadow-md">
