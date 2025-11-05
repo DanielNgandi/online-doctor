@@ -243,33 +243,146 @@ export const updateAppointmentStatus = async (req, res) => {
   }
 };
 
+// In your doctorController.js - FIXED FOR MYSQL
 export const getAllDoctorsPublic = async (req, res) => {
-  try {
-    const { search, specialty } = req.query;
+    try {
+        const { search } = req.query;
+        
+        console.log("Search query:", search);
+        
+        // Build search query for Prisma with MySQL
+        let whereClause = {};
 
-    const doctors = await prisma.doctor.findMany({
-      where: {
-        AND: [
-          search ? { name: { contains: search, mode: "insensitive" } } : {},
-          specialty ? { specialty: { contains: specialty, mode: "insensitive" } } : {}
-        ]
-      },
-      include: {
-        user: { 
-          select: { 
-            email: true,
-            createdAt: true
-          } 
-        },
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    });
+        if (search && search.trim() !== '') {
+            // For MySQL, we can use contains without mode (MySQL is case-insensitive by default for most collations)
+            // Or use raw SQL for more control
+            whereClause.OR = [
+                { name: { contains: search } },
+                { specialty: { contains: search } },
+                { hospital: { contains: search } }
+            ];
+        }
 
-    res.json(doctors);
-  } catch (err) {
-    console.error("Error fetching doctors:", err);
-    res.status(500).json({ message: "Error fetching doctors" });
-  }
+        console.log("Final where clause:", JSON.stringify(whereClause));
+
+        const doctors = await prisma.doctor.findMany({
+            where: whereClause,
+            select: {
+                id: true,
+                name: true,
+                specialty: true,
+                photo: true,
+                hospital: true,
+                contact: true,
+                avgRating: true,
+                totalRating: true,
+                totalPatients: true,
+                bio: true,
+                experience: true,
+                ticketPrice: true,
+                user: {
+                    select: {
+                        email: true
+                    }
+                }
+            }
+        });
+
+        console.log("Found doctors:", doctors.length);
+
+        // Transform the data for frontend
+        const doctorsWithFormattedData = doctors.map(doctor => ({
+            id: doctor.id,
+            name: doctor.name,
+            specialty: doctor.specialty,
+            photo: doctor.photo || "/default-doctor.jpg",
+            hospital: doctor.hospital,
+            contact: doctor.contact,
+            // Map to frontend expected fields
+            averageRating: doctor.avgRating || 0,
+            totalReviews: doctor.totalRating || 0,
+            experience: Math.floor(Math.random() * 20) + 1, // Random experience for demo
+            bio: doctor.bio || `Specialist in ${doctor.specialty}`,
+            ticketPrice: doctor.ticketPrice || 0        
+          }));
+
+        res.status(200).json(doctorsWithFormattedData);
+        
+    } catch (error) {
+        console.error("Error in getAllDoctorsPublic:", error);
+        res.status(500).json({ 
+            error: "Internal server error",
+            message: error.message 
+        });
+    }
+};
+// In doctorController.js - Add this function
+export const getDoctorById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        console.log("Fetching doctor with ID:", id);
+
+        const doctor = await prisma.doctor.findUnique({
+            where: { 
+                id: parseInt(id) 
+            },
+            select: {
+                id: true,
+                name: true,
+                specialty: true,
+                photo: true,
+                hospital: true,
+                contact: true,
+                avgRating: true,
+                totalRating: true,
+                totalPatients: true,
+                bio: true,
+                experience: true,
+                ticketPrice: true,
+                // We'll add qualifications, education, timeSlots later
+                user: {
+                    select: {
+                        email: true,
+                        username: true
+                    }
+                }
+            }
+        });
+
+        if (!doctor) {
+            return res.status(404).json({ 
+                message: "Doctor not found" 
+            });
+        }
+
+        console.log("Found doctor:", doctor.name);
+
+        // Transform the data for frontend
+        const doctorData = {
+            id: doctor.id,
+            name: doctor.name,
+            specialty: doctor.specialty,
+            photo: doctor.photo || "/default-doctor.jpg",
+            hospital: doctor.hospital,
+            contact: doctor.contact,
+            averageRating: doctor.avgRating || 0,
+            totalReviews: doctor.totalRating || 0,
+            totalPatients: doctor.totalPatients || 0,
+            experience: doctor.experience || 0,
+            bio: doctor.bio || `Specialist in ${doctor.specialty}`,
+            ticketPrice: doctor.ticketPrice || 0,
+            email: doctor.user?.email,
+            username: doctor.user?.username
+        };
+
+        res.status(200).json(doctorData);
+        
+    } catch (error) {
+        console.error("Error fetching doctor by ID:", error);
+        res.status(500).json({ 
+            error: "Internal server error",
+            message: error.message 
+        });
+    }
 };

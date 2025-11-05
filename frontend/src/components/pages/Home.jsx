@@ -244,7 +244,7 @@ const user = JSON.parse(localStorage.getItem("user"));
               health care
             </p>
           </div>
-          <DoctorsList/>
+          <DoctorsList search="" />
 
         </div>
       </section>

@@ -1,6 +1,6 @@
 
-import DoctorCard from './../../DoctorsList/DoctorCard'
-import { doctors } from '../../../assets/data/doctors'
+//import DoctorCard from './../../DoctorsList/DoctorCard'
+//import { doctors } from '../../../assets/data/doctors'
 import DoctorsList from '../../DoctorsList/DoctorsList'
 import Testiminial from '../../Testimonial/Testiminial'
 import { useState } from "react";
@@ -9,45 +9,45 @@ function Doctors() {
 
   return (
     <>
-    <section className='bg-[#fff9ea]'>
-      <div className="container text-center bg-re">
-        <h2 className="heading">Find a doctor</h2>
-        <div className="max w-[570px] mt-[30px] mx-auto bg-[#1943832c] rounded-md flex items-center">
-          <input type='search'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className='py-4 pl-4 bg-transparent w-full focus:outline-none cursor-pointer placeholder:text-textColor'
-          placeholder='search doctor'/>
-       
-          <div>
-            <button className='bg-blue-600 mt-0 w-[100px] h-[50px] text-white'
-             onClick={() => setSearch(search)}>Search</button>
+      {/* Add pt-20 to prevent header overlapping */}
+      <section className='bg-[#fff9ea] pt-20'>
+        <div className="container text-center">
+          <h2 className="heading">Find a doctor</h2>
+          <div className="max-w-[570px] mt-[30px] mx-auto bg-[#1943832c] rounded-md flex items-center">
+            <input 
+              type='search'
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className='py-4 pl-4 bg-transparent w-full focus:outline-none cursor-pointer placeholder:text-textColor'
+              placeholder='Search doctor by name or specialty'
+            />
+            <button 
+              className='bg-blue-600 py-4 px-6 text-white rounded-r-md hover:bg-blue-700 transition-colors'
+              onClick={() => setSearch(search)}
+            >
+              Search
+            </button>
           </div>
         </div>
-      </div>
-
-    </section>
+      </section>
       
-      <section>
+      {/* Doctors List Section - Fixed grid layout */}
+      <section className="py-8">
         <div className="container">
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 lg:grid-cols-4  '>
-       {/*  {doctors.map((doctor)=><DoctorCard key={doctor.id} doctor={doctor}/>)}   */}
-        <DoctorsList search={search}/>
-
-    </div>
+          {/* Remove one of the grid divs and use proper column structure */}
+          <DoctorsList search={search}/>
         </div>
       </section>
 
-      <section>
+      <section className="py-8">
         <div className="container">
           <div className="xl:w-[470px] mx-auto">
             <div className="heading text-center">
-              <h2>what do our patients say?</h2>
+              <h2>What our patients say</h2>
               <p className="text_para text-center">
-                world care for everone. our health system offers unmatched, expert care
+                World-class care for everyone. Our health system offers unmatched, expert care
               </p>
-              </div>
-              
+            </div>
           </div>
           <Testiminial/>
         </div>

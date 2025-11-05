@@ -41,11 +41,19 @@ model Doctor {
   totalRating   Int?          @default(0)
   totalPatients Int?          @default(0)
   hospital      String?
+  
+  // Add these new fields for dynamic data
+  bio           String?       @default("")
+  experience    Int?          @default(0)
+  ticketPrice   Float?        @default(0)
+  qualifications String?      // JSON string or separate table
+  education     String?       // JSON string for education history
+  timeSlots     String?       // JSON string for availability
+  
   userId        Int?          @unique
   user          User?         @relation(fields: [userId], references: [id])
   appointments  Appointment[]
 }
-
 
 model Appointment {
   id         Int      @id @default(autoincrement())

@@ -14,46 +14,61 @@ function DoctorCard({ doctor }) {
     hospital,
   } = doctor;
   return (
-    <div className="p-3 lg:p-5">
-      <div>
-        <img src={photo} alt="" />
+    <div className="p-4 lg:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+      {/* Doctor Image */}
+      <div className="flex justify-center mb-4">
+        <img 
+          src={photo} 
+          alt={name}
+          className="w-32 h-32 lg:w-40 lg:h-40 rounded-full object-cover border-4 border-primaryColor/10"
+        />
       </div>
-      <h2 className="text-[18px] leading-[30px] lg:text-[26px] lg:leading-9 text-headingColor font-[700] mt-3 lg:mt-5">
+
+      {/* Doctor Name */}
+      <h2 className="text-xl lg:text-2xl text-headingColor font-bold text-center mb-3">
         {name}
       </h2>
-      <div className="mt-2 lg:mt-4 flex items-center justify-between">
-        <span className="bg-[#CCF0F3] text-irisBlueColor py-1 px-2 lg:px-6 text-[12px] leading-4 lg:text-[16px] lg:leading-7 font-semibold rounded">
+
+      {/* Specialty and Rating */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-4">
+        <span className="bg-[#CCF0F3] text-irisBlueColor py-2 px-4 lg:px-6 text-sm lg:text-base font-semibold rounded-full">
           {specialty}
         </span>
-        <div className="flex itemms-center gap-[6px]">
-          <span className="flex items-center gap-[6px] text-[14px] leading-6 lg:text-[16px] lg:leading-7 font-semibold text-headingColor">
-            <img src={starIcon} alt="" />
-             {avgRating}
+        
+        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-full">
+          <span className="flex items-center gap-2 text-headingColor font-semibold">
+            <img src={starIcon} alt="Rating" className="w-4 h-4" />
+            {avgRating}
           </span>
-          <span className="text-[14px] leading-6 g:text-[16px] lg:leading-7 font-[400] text-textColor">
-            {totalRating}
+          <span className="text-sm text-textColor">
+            ({totalRating} reviews)
           </span>
         </div>
       </div>
-      <div className="mt-[18px] lg:mt-5 flex  items-center justify-between">
-        <div>
-          <h3 className="text-[16px] leading-7 lg:text-[18px] lg:leading-[30px] font-semibold text-headingColor">
+
+      {/* Patients and Hospital Info */}
+      <div className="space-y-3 mb-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-headingColor">
             +{totalPatients} patients
           </h3>
-          <p className="text-[14px] leading-6 font-[400] text-textColor">
-            {hospital}
+          <p className="text-textColor mt-1">
+            At {hospital}
           </p>
         </div>
+      </div>
+
+      {/* View Profile Button */}
+      <div className="flex justify-center">
         <Link
-         // to="/doctors"
-         to={`/doctors/${doctor.id}`}
-          className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] mt-[30px] mx-auto flex items-center justify-center group hover:bg-primaryColor"
+          to={`/doctors/${doctor.id}`}
+          className="flex items-center gap-2 bg-primaryColor text-white py-3 px-6 rounded-full font-semibold hover:bg-primaryColor/90 transition-colors duration-300 group"
         >
-          <BsArrowRight className="group-hover:text-white w-6 h-5" />
+          View Profile
+          <BsArrowRight className="group-hover:translate-x-1 transition-transform duration-300" />
         </Link>
       </div>
     </div>
   );
 }
-
 export default DoctorCard;
