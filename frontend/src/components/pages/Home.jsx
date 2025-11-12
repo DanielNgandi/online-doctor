@@ -226,13 +226,20 @@ const user = JSON.parse(localStorage.getItem("user"));
       {/* our great doctors */}
   <section>
   {user && user.role?.toLowerCase() === "admin" && (
-  <div className="text-center mt-6">
+  <div className="text-center mt-6 mb-8">
+      <div className="flex justify-center gap-4">
+        <Link 
+          to="/admin" 
+          className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+        >
+          🛠️ Admin Dashboard
+        </Link>
     <Link 
       to="/add-doctor" 
-      className="text-primaryColor text-[20px] font-bold hover:underline"
-    >
+className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold"    >
       ➕ Add New Doctor
     </Link>
+  </div>
   </div>
 )}
 

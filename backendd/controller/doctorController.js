@@ -28,12 +28,18 @@ export const getDoctorProfile = async (req, res) => {
       });
     }
 
-    res.json({
+    // Parse JSON fields for frontend
+    const doctorWithParsedData = {
       ...doctor,
       email: doctor.user.email,
       username: doctor.user.username,
-      createdAt: doctor.user.createdAt
-    });
+      createdAt: doctor.user.createdAt,
+      education: doctor.education ? JSON.parse(doctor.education) : [],
+      qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
+      timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
+    };
+
+    res.json(doctorWithParsedData);
   } catch (error) {
     console.error("Error fetching doctor profile:", error);
     res.status(500).json({ message: "Server error fetching profile" });
@@ -85,9 +91,22 @@ export const getDoctorStats = async (req, res) => {
   }
 };
 
-// Create doctor profile
+// Create doctor profile - UPDATED WITH ALL FIELDS
 export const createDoctorProfile = async (req, res) => {
-  const { name, specialty, contact, hospital, photo } = req.body;
+  const { 
+    name, 
+    specialty, 
+    contact, 
+    hospital, 
+    photo,
+    // NEW FIELDS
+    bio,
+    experience,
+    ticketPrice,
+    education,
+    qualifications,
+    timeSlots
+  } = req.body;
   
   try {
     // Check if doctor profile already exists for this user
@@ -108,16 +127,28 @@ export const createDoctorProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Prepare data for creation
+    const doctorData = {
+      name: name || user.username,
+      specialty: specialty || "General Practitioner",
+      contact: contact || "Not provided",
+      hospital: hospital || "",
+      photo: photo || "",
+      userId: req.user.userId,
+      // NEW FIELDS - Convert to JSON strings for database storage
+      bio: bio || "",
+      experience: experience ? parseInt(experience) : 0,
+      ticketPrice: ticketPrice ? parseFloat(ticketPrice) : 0,
+      education: education && education.length > 0 ? JSON.stringify(education) : null,
+      qualifications: qualifications && qualifications.length > 0 ? JSON.stringify(qualifications) : null,
+      timeSlots: timeSlots && timeSlots.length > 0 ? JSON.stringify(timeSlots) : null
+    };
+
+    console.log("Creating doctor profile with data:", doctorData);
+
     // Create doctor profile
     const doctor = await prisma.doctor.create({
-      data: {
-        name: name || user.username,
-        specialty: specialty || "General Practitioner",
-        contact: contact || "Not provided",
-        hospital: hospital || "",
-        photo: photo || "",
-        userId: req.user.userId,
-      },
+      data: doctorData,
       include: {
         user: {
           select: {
@@ -129,9 +160,17 @@ export const createDoctorProfile = async (req, res) => {
       }
     });
 
+    // Parse JSON fields for response
+    const doctorResponse = {
+      ...doctor,
+      education: doctor.education ? JSON.parse(doctor.education) : [],
+      qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
+      timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
+    };
+
     res.status(201).json({ 
       message: "Doctor profile created successfully", 
-      doctor 
+      doctor: doctorResponse 
     });
   } catch (error) {
     console.error("Error creating doctor profile:", error);
@@ -139,9 +178,22 @@ export const createDoctorProfile = async (req, res) => {
   }
 };
 
-// Update doctor profile
+// Update doctor profile - UPDATED WITH ALL FIELDS
 export const updateDoctorProfile = async (req, res) => {
-  const { name, specialty, contact, hospital, photo } = req.body;
+  const { 
+    name, 
+    specialty, 
+    contact, 
+    hospital, 
+    photo,
+    // NEW FIELDS
+    bio,
+    experience,
+    ticketPrice,
+    education,
+    qualifications,
+    timeSlots
+  } = req.body;
   
   try {
     // Find doctor by userId
@@ -153,15 +205,27 @@ export const updateDoctorProfile = async (req, res) => {
       return res.status(404).json({ message: "Doctor profile not found" });
     }
 
+    // Prepare update data
+    const updateData = {
+      name,
+      specialty,
+      contact,
+      hospital,
+      photo,
+      // NEW FIELDS - Convert to JSON strings for database storage
+      bio: bio || "",
+      experience: experience ? parseInt(experience) : 0,
+      ticketPrice: ticketPrice ? parseFloat(ticketPrice) : 0,
+      education: education && education.length > 0 ? JSON.stringify(education) : null,
+      qualifications: qualifications && qualifications.length > 0 ? JSON.stringify(qualifications) : null,
+      timeSlots: timeSlots && timeSlots.length > 0 ? JSON.stringify(timeSlots) : null
+    };
+
+    console.log("Updating doctor profile with data:", updateData);
+
     const updatedDoctor = await prisma.doctor.update({
       where: { id: doctor.id },
-      data: {
-        name,
-        specialty,
-        contact,
-        hospital,
-        photo
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -172,9 +236,17 @@ export const updateDoctorProfile = async (req, res) => {
       }
     });
 
+    // Parse JSON fields for response
+    const doctorResponse = {
+      ...updatedDoctor,
+      education: updatedDoctor.education ? JSON.parse(updatedDoctor.education) : [],
+      qualifications: updatedDoctor.qualifications ? JSON.parse(updatedDoctor.qualifications) : [],
+      timeSlots: updatedDoctor.timeSlots ? JSON.parse(updatedDoctor.timeSlots) : []
+    };
+
     res.json({
       message: "Profile updated successfully",
-      doctor: updatedDoctor
+      doctor: doctorResponse
     });
   } catch (error) {
     console.error("Error updating doctor profile:", error);
@@ -243,7 +315,7 @@ export const updateAppointmentStatus = async (req, res) => {
   }
 };
 
-// In your doctorController.js - FIXED FOR MYSQL
+// Get all doctors for public view - UPDATED
 export const getAllDoctorsPublic = async (req, res) => {
     try {
         const { search } = req.query;
@@ -254,8 +326,6 @@ export const getAllDoctorsPublic = async (req, res) => {
         let whereClause = {};
 
         if (search && search.trim() !== '') {
-            // For MySQL, we can use contains without mode (MySQL is case-insensitive by default for most collations)
-            // Or use raw SQL for more control
             whereClause.OR = [
                 { name: { contains: search } },
                 { specialty: { contains: search } },
@@ -280,6 +350,9 @@ export const getAllDoctorsPublic = async (req, res) => {
                 bio: true,
                 experience: true,
                 ticketPrice: true,
+                education: true,
+                qualifications: true,
+                timeSlots: true,
                 user: {
                     select: {
                         email: true
@@ -298,13 +371,15 @@ export const getAllDoctorsPublic = async (req, res) => {
             photo: doctor.photo || "/default-doctor.jpg",
             hospital: doctor.hospital,
             contact: doctor.contact,
-            // Map to frontend expected fields
             averageRating: doctor.avgRating || 0,
             totalReviews: doctor.totalRating || 0,
-            experience: Math.floor(Math.random() * 20) + 1, // Random experience for demo
+            experience: doctor.experience || 0,
             bio: doctor.bio || `Specialist in ${doctor.specialty}`,
-            ticketPrice: doctor.ticketPrice || 0        
-          }));
+            ticketPrice: doctor.ticketPrice || 0,
+            education: doctor.education ? JSON.parse(doctor.education) : [],
+            qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
+            timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
+        }));
 
         res.status(200).json(doctorsWithFormattedData);
         
@@ -316,7 +391,8 @@ export const getAllDoctorsPublic = async (req, res) => {
         });
     }
 };
-// In doctorController.js - Add this function
+
+// Get doctor by ID - UPDATED
 export const getDoctorById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -340,7 +416,9 @@ export const getDoctorById = async (req, res) => {
                 bio: true,
                 experience: true,
                 ticketPrice: true,
-                // We'll add qualifications, education, timeSlots later
+                education: true,
+                qualifications: true,
+                timeSlots: true,
                 user: {
                     select: {
                         email: true,
@@ -372,6 +450,9 @@ export const getDoctorById = async (req, res) => {
             experience: doctor.experience || 0,
             bio: doctor.bio || `Specialist in ${doctor.specialty}`,
             ticketPrice: doctor.ticketPrice || 0,
+            education: doctor.education ? JSON.parse(doctor.education) : [],
+            qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
+            timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : [],
             email: doctor.user?.email,
             username: doctor.user?.username
         };

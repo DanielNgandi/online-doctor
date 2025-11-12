@@ -11,7 +11,14 @@ function DoctorProfile() {
     specialty: '',
     contact: '',
     hospital: '',
-    photo: ''
+    photo: '',
+    // NEW FIELDS:
+    bio: '',
+    experience: 0,
+    ticketPrice: 0,
+    education: [],
+    qualifications: [],
+    timeSlots: []
   });
   const [stats, setStats] = useState({
     totalAppointments: 0,
@@ -44,7 +51,14 @@ function DoctorProfile() {
         specialty: response.data.specialty || '',
         contact: response.data.contact || '',
         hospital: response.data.hospital || '',
-        photo: response.data.photo || ''
+        photo: response.data.photo || '',
+        // NEW FIELDS:
+        bio: response.data.bio || '',
+        experience: response.data.experience || 0,
+        ticketPrice: response.data.ticketPrice || 0,
+        education: response.data.education || [],
+        qualifications: response.data.qualifications || [],
+        timeSlots: response.data.timeSlots || []
       });
       
       // Fetch stats
@@ -99,11 +113,98 @@ function DoctorProfile() {
     }
   };
 
+  // Handle basic input changes
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'experience' || name === 'ticketPrice' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  // EDUCATION METHODS
+  const addEducation = () => {
+    setFormData(prev => ({
+      ...prev,
+      education: [...prev.education, {
+        degree: "",
+        institution: "",
+        startDate: "",
+        endDate: ""
+      }]
+    }));
+  };
+
+  const updateEducation = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.map((edu, i) => 
+        i === index ? { ...edu, [field]: value } : edu
+      )
+    }));
+  };
+
+  const removeEducation = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+
+  // QUALIFICATIONS/EXPERIENCE METHODS
+  const addQualification = () => {
+    setFormData(prev => ({
+      ...prev,
+      qualifications: [...prev.qualifications, {
+        position: "",
+        hospital: "",
+        startDate: "",
+        endDate: ""
+      }]
+    }));
+  };
+
+  const updateQualification = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      qualifications: prev.qualifications.map((qual, i) => 
+        i === index ? { ...qual, [field]: value } : qual
+      )
+    }));
+  };
+
+  const removeQualification = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      qualifications: prev.qualifications.filter((_, i) => i !== index)
+    }));
+  };
+
+  // TIME SLOTS METHODS
+  const addTimeSlot = () => {
+    setFormData(prev => ({
+      ...prev,
+      timeSlots: [...prev.timeSlots, {
+        day: "Monday",
+        time: "9:00 AM - 5:00 PM"
+      }]
+    }));
+  };
+
+  const updateTimeSlot = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      timeSlots: prev.timeSlots.map((slot, i) => 
+        i === index ? { ...slot, [field]: value } : slot
+      )
+    }));
+  };
+
+  const removeTimeSlot = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      timeSlots: prev.timeSlots.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -161,7 +262,13 @@ function DoctorProfile() {
         specialty: doctor.specialty || '',
         contact: doctor.contact || '',
         hospital: doctor.hospital || '',
-        photo: doctor.photo || ''
+        photo: doctor.photo || '',
+        bio: doctor.bio || '',
+        experience: doctor.experience || 0,
+        ticketPrice: doctor.ticketPrice || 0,
+        education: doctor.education || [],
+        qualifications: doctor.qualifications || [],
+        timeSlots: doctor.timeSlots || []
       });
       setEditing(false);
     } else {
@@ -186,7 +293,7 @@ function DoctorProfile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white">
@@ -214,6 +321,12 @@ function DoctorProfile() {
               <p className="text-blue-200">
                 {doctor?.hospital || 'Your hospital/clinic will appear here'}
               </p>
+              {doctor && (
+                <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                  <span>Experience: {doctor.experience || 0} years</span>
+                  <span>Ticket Price: KSH {doctor.ticketPrice || 0}</span>
+                </div>
+              )}
               {!doctor && (
                 <p className="text-blue-100 text-sm mt-2">
                   Let's set up your profile to start receiving patients
@@ -283,7 +396,8 @@ function DoctorProfile() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* BASIC INFORMATION */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name *
@@ -359,6 +473,42 @@ function DoctorProfile() {
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Experience (years)
+                </label>
+                {(editing || !doctor) ? (
+                  <input
+                    type="number"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="0"
+                  />
+                ) : (
+                  <p className="p-3 bg-gray-50 rounded-lg">{doctor.experience || 0} years</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ticket Price (KSH)
+                </label>
+                {(editing || !doctor) ? (
+                  <input
+                    type="number"
+                    name="ticketPrice"
+                    value={formData.ticketPrice}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="0"
+                  />
+                ) : (
+                  <p className="p-3 bg-gray-50 rounded-lg">KSH {doctor.ticketPrice || 0}</p>
+                )}
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Photo URL
@@ -378,31 +528,169 @@ function DoctorProfile() {
                   </p>
                 )}
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bio
+                </label>
+                {(editing || !doctor) ? (
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows="4"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Tell patients about your background, expertise, and approach to healthcare..."
+                  />
+                ) : (
+                  <p className="p-3 bg-gray-50 rounded-lg whitespace-pre-wrap">
+                    {doctor.bio || 'No bio provided'}
+                  </p>
+                )}
+              </div>
             </div>
+
+            {/* DYNAMIC SECTIONS - Only show in edit mode */}
+            {(editing || !doctor) && (
+              <>
+                {/* EDUCATION SECTION */}
+                <div className="border-t pt-6 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Education</h3>
+                    <button type="button" onClick={addEducation} className="bg-green-500 text-white px-3 py-1 rounded text-sm">
+                      + Add Education
+                    </button>
+                  </div>
+                  
+                  {formData.education.map((edu, index) => (
+                    <div key={index} className="border p-4 rounded mb-3 bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                        <input type="text" placeholder="Degree" value={edu.degree} onChange={(e) => updateEducation(index, 'degree', e.target.value)} className="p-2 border rounded" />
+                        <input type="text" placeholder="Institution" value={edu.institution} onChange={(e) => updateEducation(index, 'institution', e.target.value)} className="p-2 border rounded" />
+                        <input type="date" placeholder="Start Date" value={edu.startDate} onChange={(e) => updateEducation(index, 'startDate', e.target.value)} className="p-2 border rounded" />
+                        <input type="date" placeholder="End Date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} className="p-2 border rounded" />
+                      </div>
+                      <button type="button" onClick={() => removeEducation(index)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* QUALIFICATIONS/EXPERIENCE SECTION */}
+                <div className="border-t pt-6 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Experience & Qualifications</h3>
+                    <button type="button" onClick={addQualification} className="bg-green-500 text-white px-3 py-1 rounded text-sm">
+                      + Add Experience
+                    </button>
+                  </div>
+                  
+                  {formData.qualifications.map((qual, index) => (
+                    <div key={index} className="border p-4 rounded mb-3 bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                        <input type="text" placeholder="Position" value={qual.position} onChange={(e) => updateQualification(index, 'position', e.target.value)} className="p-2 border rounded" />
+                        <input type="text" placeholder="Hospital" value={qual.hospital} onChange={(e) => updateQualification(index, 'hospital', e.target.value)} className="p-2 border rounded" />
+                        <input type="date" placeholder="Start Date" value={qual.startDate} onChange={(e) => updateQualification(index, 'startDate', e.target.value)} className="p-2 border rounded" />
+                        <input type="date" placeholder="End Date" value={qual.endDate} onChange={(e) => updateQualification(index, 'endDate', e.target.value)} className="p-2 border rounded" />
+                      </div>
+                      <button type="button" onClick={() => removeQualification(index)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* TIME SLOTS SECTION */}
+                <div className="border-t pt-6 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Available Time Slots</h3>
+                    <button type="button" onClick={addTimeSlot} className="bg-green-500 text-white px-3 py-1 rounded text-sm">
+                      + Add Time Slot
+                    </button>
+                  </div>
+                  
+                  {formData.timeSlots.map((slot, index) => (
+                    <div key={index} className="border p-4 rounded mb-3 bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                        <select value={slot.day} onChange={(e) => updateTimeSlot(index, 'day', e.target.value)} className="p-2 border rounded">
+                          <option value="Monday">Monday</option>
+                          <option value="Tuesday">Tuesday</option>
+                          <option value="Wednesday">Wednesday</option>
+                          <option value="Thursday">Thursday</option>
+                          <option value="Friday">Friday</option>
+                          <option value="Saturday">Saturday</option>
+                          <option value="Sunday">Sunday</option>
+                        </select>
+                        <input type="text" placeholder="Time (e.g., 9:00 AM - 5:00 PM)" value={slot.time} onChange={(e) => updateTimeSlot(index, 'time', e.target.value)} className="p-2 border rounded" />
+                      </div>
+                      <button type="button" onClick={() => removeTimeSlot(index)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </form>
 
-          {/* Additional Information - Only show if profile exists */}
+          {/* DISPLAY MODE - Show dynamic data when not editing */}
           {!editing && doctor && (
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-600">
-                <div>
-                  <span className="font-medium">Average Rating:</span>
-                  <p>{doctor.avgRating ? `${doctor.avgRating}/5` : 'No ratings yet'}</p>
+            <div className="space-y-8">
+              {/* Education Display */}
+              {doctor.education && doctor.education.length > 0 && (
+                <div className="border-t pt-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Education</h3>
+                  <div className="space-y-3">
+                    {doctor.education.map((edu, index) => (
+                      <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-gray-800">{edu.degree}</p>
+                            <p className="text-gray-600">{edu.institution}</p>
+                          </div>
+                          <div className="text-right text-sm text-gray-500">
+                            <p>{new Date(edu.startDate).toLocaleDateString()} - {new Date(edu.endDate).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium">Total Ratings:</span>
-                  <p>{doctor.totalRating || 0}</p>
+              )}
+
+              {/* Experience Display */}
+              {doctor.qualifications && doctor.qualifications.length > 0 && (
+                <div className="border-t pt-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Experience & Qualifications</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {doctor.qualifications.map((qual, index) => (
+                      <div key={index} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p className="font-semibold text-gray-800">{qual.position}</p>
+                        <p className="text-gray-600">{qual.hospital}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {new Date(qual.startDate).toLocaleDateString()} - {qual.endDate === 'present' ? 'Present' : new Date(qual.endDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium">Member Since:</span>
-                  <p>{doctor.createdAt ? new Date(doctor.createdAt).toLocaleDateString() : 'N/A'}</p>
+              )}
+
+              {/* Time Slots Display */}
+              {doctor.timeSlots && doctor.timeSlots.length > 0 && (
+                <div className="border-t pt-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Available Time Slots</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {doctor.timeSlots.map((slot, index) => (
+                      <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <p className="font-semibold text-gray-800">{slot.day}</p>
+                        <p className="text-gray-600">{slot.time}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium">Status:</span>
-                  <p className="text-green-600 font-medium">Active</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
