@@ -49,7 +49,7 @@ function Header() {
     } else if (user?.role === "doctor") {
       return "/doctor-profile";
     } else if (user?.role === "admin") {
-      return "/admin/profile"; // FIXED: Changed to admin profile path
+      return "/admin/profile"; 
     }
     return "/profile";
   };
@@ -91,17 +91,17 @@ function Header() {
           </div>
 
           {/* menu */}
-          <div className="navigation" ref={menuRef} onClick={toggleMenu}>
-            <ul className="menu flex items-center gap-[2.7rem]">
+          <div className="navigation flex-1 mx-2 lg:mx-4" ref={menuRef} onClick={toggleMenu}>
+            <ul className="menu flex items-center gap-[1rem] lg:gap-[1.5rem] xl:gap-[2.7rem] flex-nowrap overflow-x-auto">
               {/* Always show these navigation links */}
               {navLinks.map((link, index) => (
-                <li key={index}>
+                <li key={index} className="flex-shrink-0">
                   <NavLink
                     to={link.path}
                     className={(navClass) =>
                       navClass.isActive
-                        ? "text-primaryColor text-[16px] leading-7 font-[600]"
-                        : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor"
+                        ? "text-primaryColor text-[16px] leading-7 font-[600]whitespace-nowrap"
+                        : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
                     }
                   >
                     {link.display}
@@ -113,13 +113,13 @@ function Header() {
               {user ? (
                 <>
                   {/* View Appointments - for both patients and doctors */}
-                  <li>
+                  <li className="flex-shrink-0">
                     <NavLink
                       to={getAppointmentPath()}
                       className={(navClass) =>
                         navClass.isActive
-                          ? "text-primaryColor text-[16px] leading-7 font-[600]"
-                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor"
+                          ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
+                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
                       }
                     >
                       View Appointments
@@ -128,13 +128,13 @@ function Header() {
                   
                   {/* Book Appointment - only for patients */}
                   {user.role === 'patient' && (
-                    <li>
+                    <li className="flex-shrink-0">
                       <NavLink
                         to="/book-appointment"
                         className={(navClass) =>
                           navClass.isActive
-                            ? "text-primaryColor text-[16px] leading-7 font-[600]"
-                            : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor"
+                            ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
+                            : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
                         }
                       >
                         Book Appointment
@@ -143,13 +143,13 @@ function Header() {
                   )}
                   
                   {/* Profile links */}
-                  <li>
+                  <li className="flex-shrink-0">
                     <NavLink
                       to={getProfilePath()} 
                       className={(navClass) =>
                         navClass.isActive
-                          ? "text-primaryColor text-[16px] leading-7 font-[600]"
-                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor"
+                          ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
+                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
                       }
                     >
                       My Profile
@@ -163,7 +163,7 @@ function Header() {
           {/* nav right */}
           <div className="flex items-center gap-4">
             {user ? (
-              // User is logged in - show profile and logout
+              
               <div className="flex items-center gap-4">
                 {/* User Profile with avatar */}
                 <Link 

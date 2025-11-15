@@ -1,12 +1,9 @@
-// src/controllers/doctorController.js
 import prisma from "../config/prisma.js";
 
-// Get doctor profile - Handle missing profile gracefully
 export const getDoctorProfile = async (req, res) => {
   try {
     console.log("Request user:", req.user);
 
-    // Find doctor by userId
     const doctor = await prisma.doctor.findFirst({
       where: { userId: req.user.userId },
       include: {
@@ -16,6 +13,15 @@ export const getDoctorProfile = async (req, res) => {
             username: true,
             createdAt: true
           }
+        },
+        educations: {
+          orderBy: { startDate: 'desc' }
+        },
+        workExperiences: {
+          orderBy: { startDate: 'desc' }
+        },
+        timeSlots: {
+          orderBy: { dayOfWeek: 'asc' }
         }
       }
     });
@@ -24,38 +30,34 @@ export const getDoctorProfile = async (req, res) => {
       console.log(`No doctor profile found for userId: ${req.user.userId}`);
       return res.status(404).json({ 
         message: "Doctor profile not found",
-        needsSetup: true // Add this flag for frontend
+        needsSetup: true
       });
     }
 
-    // Parse JSON fields for frontend
-    const doctorWithParsedData = {
+    res.json({
       ...doctor,
       email: doctor.user.email,
       username: doctor.user.username,
       createdAt: doctor.user.createdAt,
-      education: doctor.education ? JSON.parse(doctor.education) : [],
-      qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
-      timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
-    };
-
-    res.json(doctorWithParsedData);
+      // For backward compatibility with frontend
+      education: doctor.educations,
+      qualifications: doctor.workExperiences
+    });
   } catch (error) {
     console.error("Error fetching doctor profile:", error);
     res.status(500).json({ message: "Server error fetching profile" });
   }
 };
 
-// Get doctor stats - Handle missing profile gracefully
 export const getDoctorStats = async (req, res) => {
   try {
-    // Find doctor by userId
+  
     const doctor = await prisma.doctor.findFirst({
       where: { userId: req.user.userId },
     });
 
     if (!doctor) {
-      // Return empty stats if no profile exists
+     
       return res.json({
         totalAppointments: 0,
         upcomingAppointments: 0,
@@ -91,7 +93,6 @@ export const getDoctorStats = async (req, res) => {
   }
 };
 
-// Create doctor profile - UPDATED WITH ALL FIELDS
 export const createDoctorProfile = async (req, res) => {
   const { 
     name, 
@@ -99,17 +100,15 @@ export const createDoctorProfile = async (req, res) => {
     contact, 
     hospital, 
     photo,
-    // NEW FIELDS
     bio,
     experience,
     ticketPrice,
-    education,
-    qualifications,
+    educations,
+    workExperiences,
     timeSlots
   } = req.body;
   
   try {
-    // Check if doctor profile already exists for this user
     const existingDoctor = await prisma.doctor.findFirst({
       where: { userId: req.user.userId },
     });
@@ -118,7 +117,6 @@ export const createDoctorProfile = async (req, res) => {
       return res.status(400).json({ message: "Doctor profile already exists" });
     }
 
-    // Get user info for default values
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId }
     });
@@ -127,28 +125,51 @@ export const createDoctorProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Prepare data for creation
-    const doctorData = {
-      name: name || user.username,
-      specialty: specialty || "General Practitioner",
-      contact: contact || "Not provided",
-      hospital: hospital || "",
-      photo: photo || "",
-      userId: req.user.userId,
-      // NEW FIELDS - Convert to JSON strings for database storage
-      bio: bio || "",
-      experience: experience ? parseInt(experience) : 0,
-      ticketPrice: ticketPrice ? parseFloat(ticketPrice) : 0,
-      education: education && education.length > 0 ? JSON.stringify(education) : null,
-      qualifications: qualifications && qualifications.length > 0 ? JSON.stringify(qualifications) : null,
-      timeSlots: timeSlots && timeSlots.length > 0 ? JSON.stringify(timeSlots) : null
-    };
+    console.log("Creating doctor profile with data:", {
+      name, specialty, contact, hospital, photo, bio, experience, ticketPrice,
+      educationsCount: educations?.length || 0,
+      workExperiencesCount: workExperiences?.length || 0,
+      timeSlotsCount: timeSlots?.length || 0
+    });
 
-    console.log("Creating doctor profile with data:", doctorData);
-
-    // Create doctor profile
     const doctor = await prisma.doctor.create({
-      data: doctorData,
+      data: {
+        name: name || user.username,
+        specialty: specialty || "General Practitioner",
+        contact: contact || "Not provided",
+        hospital: hospital || "",
+        photo: photo || "",
+        bio: bio || "",
+        experience: experience ? parseInt(experience) : 0,
+        ticketPrice: ticketPrice ? parseFloat(ticketPrice) : 0,
+        userId: req.user.userId,
+        educations: {
+          create: educations && educations.length > 0 ? educations.map(edu => ({
+            degree: edu.degree,
+            institution: edu.institution,
+            startDate: new Date(edu.startDate),
+            endDate: new Date(edu.endDate),
+            description: edu.description || ""
+          })) : []
+        },
+        workExperiences: {
+          create: workExperiences && workExperiences.length > 0 ? workExperiences.map(exp => ({
+            position: exp.position,
+            hospital: exp.hospital,
+            startDate: new Date(exp.startDate),
+            endDate: new Date(exp.endDate),
+            description: exp.description || ""
+          })) : []
+        },
+        timeSlots: {
+          create: timeSlots && timeSlots.length > 0 ? timeSlots.map(slot => ({
+            dayOfWeek: slot.dayOfWeek || slot.day, // Support both field names
+            startTime: formatTime(slot.startTime),
+            endTime: formatTime(slot.endTime),
+            isAvailable: true
+          })) : []
+        }
+      },
       include: {
         user: {
           select: {
@@ -156,21 +177,20 @@ export const createDoctorProfile = async (req, res) => {
             username: true,
             createdAt: true
           }
-        }
+        },
+        educations: true,
+        workExperiences: true,
+        timeSlots: true
       }
     });
 
-    // Parse JSON fields for response
-    const doctorResponse = {
-      ...doctor,
-      education: doctor.education ? JSON.parse(doctor.education) : [],
-      qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
-      timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
-    };
-
     res.status(201).json({ 
       message: "Doctor profile created successfully", 
-      doctor: doctorResponse 
+      doctor: {
+        ...doctor,
+        education: doctor.educations,
+        qualifications: doctor.workExperiences
+      }
     });
   } catch (error) {
     console.error("Error creating doctor profile:", error);
@@ -178,7 +198,6 @@ export const createDoctorProfile = async (req, res) => {
   }
 };
 
-// Update doctor profile - UPDATED WITH ALL FIELDS
 export const updateDoctorProfile = async (req, res) => {
   const { 
     name, 
@@ -186,46 +205,48 @@ export const updateDoctorProfile = async (req, res) => {
     contact, 
     hospital, 
     photo,
-    // NEW FIELDS
     bio,
     experience,
     ticketPrice,
-    education,
-    qualifications,
+    educations,
+    workExperiences,
     timeSlots
   } = req.body;
   
   try {
-    // Find doctor by userId
     const doctor = await prisma.doctor.findFirst({
       where: { userId: req.user.userId },
+      include: {
+        educations: true,
+        workExperiences: true,
+        timeSlots: true
+      }
     });
 
     if (!doctor) {
       return res.status(404).json({ message: "Doctor profile not found" });
     }
 
-    // Prepare update data
-    const updateData = {
-      name,
-      specialty,
-      contact,
-      hospital,
-      photo,
-      // NEW FIELDS - Convert to JSON strings for database storage
-      bio: bio || "",
-      experience: experience ? parseInt(experience) : 0,
-      ticketPrice: ticketPrice ? parseFloat(ticketPrice) : 0,
-      education: education && education.length > 0 ? JSON.stringify(education) : null,
-      qualifications: qualifications && qualifications.length > 0 ? JSON.stringify(qualifications) : null,
-      timeSlots: timeSlots && timeSlots.length > 0 ? JSON.stringify(timeSlots) : null
-    };
+    console.log("Updating doctor profile with data:", {
+      name, specialty, contact, hospital, photo, bio, experience, ticketPrice,
+      educationsCount: educations?.length || 0,
+      workExperiencesCount: workExperiences?.length || 0,
+      timeSlotsCount: timeSlots?.length || 0
+    });
 
-    console.log("Updating doctor profile with data:", updateData);
-
+    // Update basic doctor info
     const updatedDoctor = await prisma.doctor.update({
       where: { id: doctor.id },
-      data: updateData,
+      data: {
+        name: name || doctor.name,
+        specialty: specialty || doctor.specialty,
+        contact: contact || doctor.contact,
+        hospital: hospital !== undefined ? hospital : doctor.hospital,
+        photo: photo !== undefined ? photo : doctor.photo,
+        bio: bio !== undefined ? bio : doctor.bio,
+        experience: experience !== undefined ? parseInt(experience) : doctor.experience,
+        ticketPrice: ticketPrice !== undefined ? parseFloat(ticketPrice) : doctor.ticketPrice,
+      },
       include: {
         user: {
           select: {
@@ -236,17 +257,95 @@ export const updateDoctorProfile = async (req, res) => {
       }
     });
 
-    // Parse JSON fields for response
-    const doctorResponse = {
-      ...updatedDoctor,
-      education: updatedDoctor.education ? JSON.parse(updatedDoctor.education) : [],
-      qualifications: updatedDoctor.qualifications ? JSON.parse(updatedDoctor.qualifications) : [],
-      timeSlots: updatedDoctor.timeSlots ? JSON.parse(updatedDoctor.timeSlots) : []
-    };
+    // Update educations (delete all and recreate)
+    if (educations !== undefined) {
+      await prisma.education.deleteMany({
+        where: { doctorId: doctor.id }
+      });
+      
+      if (educations.length > 0) {
+        await prisma.education.createMany({
+          data: educations.map(edu => ({
+            degree: edu.degree,
+            institution: edu.institution,
+            startDate: new Date(edu.startDate),
+            endDate: new Date(edu.endDate),
+            description: edu.description || "",
+            doctorId: doctor.id
+          }))
+        });
+      }
+    }
+
+    // Update work experiences
+    if (workExperiences !== undefined) {
+      await prisma.workExperience.deleteMany({
+        where: { doctorId: doctor.id }
+      });
+      
+      if (workExperiences.length > 0) {
+        await prisma.workExperience.createMany({
+          data: workExperiences.map(exp => ({
+            position: exp.position,
+            hospital: exp.hospital,
+            startDate: new Date(exp.startDate),
+            endDate: new Date(exp.endDate),
+            description: exp.description || "",
+            doctorId: doctor.id
+          }))
+        });
+      }
+    }
+
+    // Update time slots
+    if (timeSlots !== undefined) {
+      await prisma.timeSlot.deleteMany({
+        where: { doctorId: doctor.id }
+      });
+      
+      if (timeSlots.length > 0) {
+        await prisma.timeSlot.createMany({
+          data: timeSlots.map(slot => ({
+            dayOfWeek: slot.dayOfWeek || slot.day, // Support both field names
+            startTime: formatTime(slot.startTime),
+            endTime: formatTime(slot.endTime),
+            isAvailable: true,
+            doctorId: doctor.id
+          }))
+        });
+      }
+    }
+
+    // Get the fully updated doctor with all relations
+    const finalDoctor = await prisma.doctor.findUnique({
+      where: { id: doctor.id },
+      include: {
+        user: {
+          select: {
+            email: true,
+            username: true
+          }
+        },
+        educations: {
+          orderBy: { startDate: 'desc' }
+        },
+        workExperiences: {
+          orderBy: { startDate: 'desc' }
+        },
+        timeSlots: {
+          orderBy: { dayOfWeek: 'asc' }
+        }
+      }
+    });
 
     res.json({
       message: "Profile updated successfully",
-      doctor: doctorResponse
+      doctor: {
+        ...finalDoctor,
+        // For backward compatibility
+        education: finalDoctor.educations,
+        qualifications: finalDoctor.workExperiences
+      }
     });
   } catch (error) {
     console.error("Error updating doctor profile:", error);
@@ -322,7 +421,6 @@ export const getAllDoctorsPublic = async (req, res) => {
         
         console.log("Search query:", search);
         
-        // Build search query for Prisma with MySQL
         let whereClause = {};
 
         if (search && search.trim() !== '') {
@@ -333,25 +431,11 @@ export const getAllDoctorsPublic = async (req, res) => {
             ];
         }
 
-        console.log("Final where clause:", JSON.stringify(whereClause));
-
         const doctors = await prisma.doctor.findMany({
             where: whereClause,
-            select: {
-                id: true,
-                name: true,
-                specialty: true,
-                photo: true,
-                hospital: true,
-                contact: true,
-                avgRating: true,
-                totalRating: true,
-                totalPatients: true,
-                bio: true,
-                experience: true,
-                ticketPrice: true,
-                education: true,
-                qualifications: true,
+            include: {
+                educations: true,
+                workExperiences: true,
                 timeSlots: true,
                 user: {
                     select: {
@@ -376,9 +460,16 @@ export const getAllDoctorsPublic = async (req, res) => {
             experience: doctor.experience || 0,
             bio: doctor.bio || `Specialist in ${doctor.specialty}`,
             ticketPrice: doctor.ticketPrice || 0,
-            education: doctor.education ? JSON.parse(doctor.education) : [],
-            qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
-            timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : []
+            // Use relational data directly
+            education: doctor.educations,
+            qualifications: doctor.workExperiences, // For backward compatibility
+            workExperiences: doctor.workExperiences,
+            timeSlots: doctor.timeSlots.map(slot => ({
+                day: slot.dayOfWeek,
+                time: `${slot.startTime} - ${slot.endTime}`,
+                startTime: slot.startTime,
+                endTime: slot.endTime
+            }))
         }));
 
         res.status(200).json(doctorsWithFormattedData);
@@ -403,22 +494,16 @@ export const getDoctorById = async (req, res) => {
             where: { 
                 id: parseInt(id) 
             },
-            select: {
-                id: true,
-                name: true,
-                specialty: true,
-                photo: true,
-                hospital: true,
-                contact: true,
-                avgRating: true,
-                totalRating: true,
-                totalPatients: true,
-                bio: true,
-                experience: true,
-                ticketPrice: true,
-                education: true,
-                qualifications: true,
-                timeSlots: true,
+            include: {
+                educations: {
+                    orderBy: { startDate: 'desc' }
+                },
+                workExperiences: {
+                    orderBy: { startDate: 'desc' }
+                },
+                timeSlots: {
+                    orderBy: { dayOfWeek: 'asc' }
+                },
                 user: {
                     select: {
                         email: true,
@@ -450,9 +535,16 @@ export const getDoctorById = async (req, res) => {
             experience: doctor.experience || 0,
             bio: doctor.bio || `Specialist in ${doctor.specialty}`,
             ticketPrice: doctor.ticketPrice || 0,
-            education: doctor.education ? JSON.parse(doctor.education) : [],
-            qualifications: doctor.qualifications ? JSON.parse(doctor.qualifications) : [],
-            timeSlots: doctor.timeSlots ? JSON.parse(doctor.timeSlots) : [],
+            // Use relational data directly
+            education: doctor.educations,
+            qualifications: doctor.workExperiences, // For backward compatibility
+            workExperiences: doctor.workExperiences,
+            timeSlots: doctor.timeSlots.map(slot => ({
+                day: slot.dayOfWeek,
+                time: `${slot.startTime} - ${slot.endTime}`,
+                startTime: slot.startTime,
+                endTime: slot.endTime
+            })),
             email: doctor.user?.email,
             username: doctor.user?.username
         };
@@ -467,3 +559,150 @@ export const getDoctorById = async (req, res) => {
         });
     }
 };
+
+function formatTime(timeString) {
+    if (!timeString) return "09:00";
+    
+    // Handle various time formats
+    if (timeString.includes(':')) {
+        // Already in HH:MM format
+        const [hours, minutes] = timeString.split(':');
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    }
+    
+    // Handle AM/PM format
+    const time = new Date(`2000-01-01 ${timeString}`);
+    if (!isNaN(time.getTime())) {
+        return time.toTimeString().slice(0, 5); // Returns "09:00"
+    }
+    
+    return "09:00"; // Default fallback
+}
+// Add to doctorsController.js
+export const getDoctorReviews = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { page = 1, limit = 5 } = req.query
+
+    const reviews = await prisma.testimonial.findMany({
+      where: {
+        doctorId: parseInt(id),
+        status: 'APPROVED'
+      },
+      include: {
+        patient: {
+          select: {
+            name: true,
+            photo: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      take: parseInt(limit)
+    })
+
+    // Calculate rating distribution
+    const ratingDistribution = await prisma.testimonial.groupBy({
+      by: ['rating'],
+      where: {
+        doctorId: parseInt(id),
+        status: 'APPROVED'
+      },
+      _count: {
+        rating: true
+      }
+    })
+
+    // Calculate average rating and total reviews
+    const ratingStats = await prisma.testimonial.aggregate({
+      where: {
+        doctorId: parseInt(id),
+        status: 'APPROVED'
+      },
+      _avg: {
+        rating: true
+      },
+      _count: {
+        rating: true
+      }
+    })
+
+    res.json({
+      reviews,
+      averageRating: ratingStats._avg.rating || 0,
+      totalReviews: ratingStats._count.rating || 0,
+      ratingDistribution,
+      totalPages: Math.ceil(ratingStats._count.rating / parseInt(limit)),
+      currentPage: parseInt(page)
+    })
+  } catch (error) {
+    console.error("Error fetching doctor reviews:", error)
+    res.status(500).json({ message: "Server error fetching doctor reviews" })
+  }
+}
+
+export const submitDoctorReview = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { rating, comment } = req.body
+    const userId = req.user.userId
+
+    // Verify user has completed appointment with this doctor
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        patientId: userId,
+        doctorId: parseInt(id),
+        status: 'COMPLETED'
+      }
+    })
+
+    if (!appointment) {
+      return res.status(400).json({ 
+        message: "You can only review doctors you've had completed appointments with" 
+      })
+    }
+
+    // Check if user already reviewed this doctor
+    const existingReview = await prisma.testimonial.findFirst({
+      where: {
+        patientId: userId,
+        doctorId: parseInt(id)
+      }
+    })
+
+    if (existingReview) {
+      return res.status(400).json({ 
+        message: "You have already reviewed this doctor" 
+      })
+    }
+
+    const testimonial = await prisma.testimonial.create({
+      data: {
+        rating: parseInt(rating),
+        comment: comment.trim(),
+        patientId: userId,
+        doctorId: parseInt(id),
+        status: 'PENDING'
+      },
+      include: {
+        patient: {
+          select: {
+            name: true,
+            photo: true
+          }
+        }
+      }
+    })
+
+    res.status(201).json({
+      message: "Thank you for your review! It is pending approval.",
+      testimonial
+    })
+  } catch (error) {
+    console.error("Error submitting doctor review:", error)
+    res.status(500).json({ message: "Server error submitting review" })
+  }
+}

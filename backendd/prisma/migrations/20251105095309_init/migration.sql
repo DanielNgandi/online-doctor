@@ -1,7 +1,0 @@
--- AlterTable
-ALTER TABLE `doctor` ADD COLUMN `bio` VARCHAR(191) NULL DEFAULT '',
-    ADD COLUMN `education` VARCHAR(191) NULL,
-    ADD COLUMN `experience` INTEGER NULL DEFAULT 0,
-    ADD COLUMN `qualifications` VARCHAR(191) NULL,
-    ADD COLUMN `ticketPrice` DOUBLE NULL DEFAULT 0,
-    ADD COLUMN `timeSlots` VARCHAR(191) NULL;

@@ -27,15 +27,13 @@ function Login() {
 
       if (res.ok) {
         login(data.user, data.token);
-        // ✅ save token in localStorage for authenticated requests
-        //localStorage.setItem("token", data.token);
-        //localStorage.setItem("user", JSON.stringify(data.user));
+        
 
         alert("Login successful!");
         console.log("User:", data.user);
 
         if (data.user.role.toLowerCase() === "admin") {
-          navigate("/add-doctor");
+          navigate("/admin/appointments");
         } else if (data.user.role === "doctor") {
           navigate("/home");
         } else {

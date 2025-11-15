@@ -11,7 +11,7 @@ function AdminAddDoctor() {
     contact: "",
     photo: "",
     hospital: "",
-    // NEW FIELDS:
+
     bio: "",
     experience: 0,
     ticketPrice: 0,
@@ -90,7 +90,7 @@ function AdminAddDoctor() {
     }));
   };
 
-  // TIME SLOTS METHODS
+  
   const addTimeSlot = () => {
     setFormData(prev => ({
       ...prev,
@@ -123,18 +123,18 @@ function AdminAddDoctor() {
     setLoading(true);
     
     try {
-      // get token from localStorage (after login)
+    
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
 
       console.log("Submitting doctor data:", formData);
 
-      // For now, we'll log the data since we need to create the backend endpoint
+      
       setMessage("✅ Doctor data ready! (Backend integration needed)");
       console.log("Full doctor data to send:", formData);
 
-      // TODO: Uncomment this when backend endpoint is ready
-      /*
+      
+      
       const res = await axios.post("http://localhost:5000/api/admin/doctors", formData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -143,7 +143,7 @@ function AdminAddDoctor() {
 
       setMessage("✅ Doctor added successfully!");
       console.log(res.data);
-      */
+      
 
       // Reset form
       setFormData({

@@ -14,10 +14,12 @@ model User {
   password  String
   role      String    @default("patient") // patient, doctor, admin
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Back-relations
   patient   Patient?
   doctor    Doctor?
+  feedbacks Feedback[]  // Removed testimonials from User - testimonials go through Patient
 }
 
 model Patient {
@@ -26,9 +28,12 @@ model Patient {
   dob       DateTime
   gender    String
   contact   String
+  photo     String?  // Patient profile photo
   userId    Int?     @unique
   user      User?    @relation(fields: [userId], references: [id])
   appointments Appointment[]
+  testimonials Testimonial[]
+  ratings      DoctorRating[] 
 }
 
 model Doctor {
@@ -40,29 +45,183 @@ model Doctor {
   avgRating     Float?        @default(0)
   totalRating   Int?          @default(0)
   totalPatients Int?          @default(0)
+  totalReviews  Int?          @default(0)
   hospital      String?
-  
-  // Add these new fields for dynamic data
   bio           String?       @default("")
   experience    Int?          @default(0)
   ticketPrice   Float?        @default(0)
-  qualifications String?      // JSON string or separate table
-  education     String?       // JSON string for education history
-  timeSlots     String?       // JSON string for availability
-  
+  educations      Education[]
+  workExperiences WorkExperience[]
+  timeSlots       TimeSlot[]
   userId        Int?          @unique
   user          User?         @relation(fields: [userId], references: [id])
   appointments  Appointment[]
+  testimonials    Testimonial[]
+  ratings         DoctorRating[]
+  ratingBreakdown RatingBreakdown? 
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Education {
+  id          Int      @id @default(autoincrement())
+  degree      String
+  institution String
+  startDate   DateTime
+  endDate     DateTime
+  description String?  
+  doctorId    Int
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkExperience {
+  id          Int      @id @default(autoincrement())
+  position    String
+  hospital    String
+  startDate   DateTime
+  endDate     DateTime
+  description String?  
+  doctorId    Int
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TimeSlot {
+  id          Int      @id @default(autoincrement())
+  dayOfWeek   String   // Monday, Tuesday, Wednesday, etc.
+  startTime   String   // Format: "09:00", "14:30"
+  endTime     String   // Format: "17:00", "18:30"
+  isAvailable Boolean  @default(true)
+  doctorId    Int
+  doctor      Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([doctorId, dayOfWeek, startTime]) // Prevent duplicate time slots
 }
 
 model Appointment {
-  id         Int      @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   date       DateTime
   reason     String
+  status     AppointmentStatus @default(PENDING)
   patientId  Int
   doctorId   Int
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  patient    Patient  @relation(fields: [patientId], references: [id])
-  doctor     Doctor   @relation(fields: [doctorId], references: [id])
+  patient    Patient     @relation(fields: [patientId], references: [id])
+  doctor     Doctor      @relation(fields: [doctorId], references: [id])
+  
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+}
+
+// Testimonial/Review model for patient feedback
+model Testimonial {
+  id        Int               @id @default(autoincrement())
+  rating    Int               // 1-5 stars
+  comment   String
+  status    TestimonialStatus @default(PENDING)
+  patientId Int
+  doctorId  Int?              // Optional: if reviewing a specific doctor
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  // Relations
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    Doctor?           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Separate rating model for quick rating without comments
+model DoctorRating {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5 stars
+  patientId Int
+  doctorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, doctorId]) // One rating per patient per doctor
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model Feedback {
+  id        Int            @id @default(autoincrement())
+  title     String
+  message   String
+  type      FeedbackType   @default(GENERAL)
+  status    FeedbackStatus @default(PENDING)
+  userId    Int?           // Optional: can be anonymous
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Relations
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+// Rating breakdown for detailed analytics
+model RatingBreakdown {
+  id        Int @id @default(autoincrement())
+  doctorId  Int
+  oneStar   Int @default(0)
+  twoStar   Int @default(0)
+  threeStar Int @default(0)
+  fourStar  Int @default(0)
+  fiveStar  Int @default(0)
+  
+  doctor    Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId]) // One breakdown per doctor
+}
+
+// Enums
+enum TestimonialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum FeedbackType {
+  GENERAL
+  BUG_REPORT
+  FEATURE_REQUEST
+  COMPLAINT
+  COMPLIMENT
+}
+
+enum FeedbackStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  CLOSED
 }
