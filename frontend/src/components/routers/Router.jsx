@@ -12,11 +12,11 @@ import AdminAppointments from '../pages/Admin/AdminAppointments';
 import PatientProfileSetup from '../pages/patients/PatientProfileSetup'
 import DoctorProfile from '../pages/Doctors/DoctorProfile';
 import BookAppointment from "../pages/appointment/appointment";
-//import AdminDashboard from '../pages/Admin/AdminDashboard'
 import DoctorAppointments from '../pages/Doctors/DoctorAppointments';
 import PatientAppointments from '../pages/patients/PatientAppointments';
 import AdminRoute from './AdminRoute'
 import AdminProfile from '../pages/Admin/AdminProfile'; 
+import Testimonials from '../pages/Testimonials';
 function Router() {
   return <Routes>
     <Route path='/' element={<Home/>}/>
@@ -32,7 +32,7 @@ function Router() {
     <Route path="/doctor-profile" element={<DoctorProfile />} />
     <Route path="/doctor/my-appointments" element={<DoctorAppointments />} />
     <Route path="/admin/appointments" element={<AdminAppointments />} />
-   
+   <Route path='/testimonials' element={<Testimonials/>}/> 
     <Route path="/patient/my-appointments" element={<PatientAppointments />} /> 
     <Route path="/patient-profile" element={<PatientProfileSetup />} />
     <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />

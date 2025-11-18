@@ -2,7 +2,7 @@
 //import DoctorCard from './../../DoctorsList/DoctorCard'
 //import { doctors } from '../../../assets/data/doctors'
 import DoctorsList from '../../DoctorsList/DoctorsList'
-import Testiminial from '../../Testimonial/Testiminial'
+import Testiminial from '../../Testimonial/TestimonialPage'
 import { useState } from "react";
 function Doctors() {
  const [search, setSearch] = useState("");

@@ -9,7 +9,7 @@ import { BsArrowRight } from "react-icons/bs";
 import About from "../about/About";
 import ServiceList from "../services/ServiceList";
 import FaqList from '../FAQ/FaqList';
-import Testiminial from '../Testimonial/Testiminial';
+import Testimonial from '../Testimonial/Testimonial';
 
 function Home() {
 
@@ -277,20 +277,20 @@ className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 tra
       {/* testmonia section starts */}
       {/* testimonia section ends */}
 
-      <section>
-        <div className="container">
-          <div className="xl:w-[470px] mx-auto">
-            <div className="heading text-center">
-              <h2>what do our patients say?</h2>
-              <p className="text_para text-center">
-                world care for everone. our health system offers unmatched, expert care
-              </p>
-              </div>
-              
-          </div>
-          <Testiminial/>
-        </div>
-      </section>
+      {/* testimonial section starts */}
+<section className="my-16">
+  <div className="container">
+    <div className="xl:w-[470px] mx-auto mb-12">
+      <div className="heading text-center">
+        <h2>What Our Patients Say</h2>
+        <p className="text_para text-center">
+          Hear from our patients about their experiences with our healthcare services
+        </p>
+      </div>
+    </div>
+    <Testimonial />
+  </div>
+</section>
     </>
   );
 }

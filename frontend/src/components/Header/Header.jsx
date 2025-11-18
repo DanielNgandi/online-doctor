@@ -141,6 +141,9 @@ function Header() {
                       </NavLink>
                     </li>
                   )}
+                  <Link to="/testimonials" className="text-textColor hover:text-primary">
+  Testimonials
+</Link>
                   
                   {/* Profile links */}
                   <li className="flex-shrink-0">
