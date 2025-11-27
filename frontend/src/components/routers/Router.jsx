@@ -26,7 +26,7 @@ function Router() {
     <Route path='/login' element={<Login/>}/>
     <Route path='/register' element={<Signup/>}/>
     <Route path='/services' element={<Services/>}/>
-    <Route path='/contacts' element={<Contact/>}/>
+    <Route path="/contact" element={<Contact />} />
     <Route path="/add-doctor"element={<AdminRoute><AdminAddDoctor /></AdminRoute> }/> 
     <Route path="/book-appointment" element={<BookAppointment />} />
     <Route path="/doctor-profile" element={<DoctorProfile />} />

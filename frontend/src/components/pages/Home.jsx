@@ -10,18 +10,23 @@ import About from "../about/About";
 import ServiceList from "../services/ServiceList";
 import FaqList from '../FAQ/FaqList';
 import Testimonial from '../Testimonial/Testimonial';
-
+import ImageSlideshow from '../ImageSlideshow'; 
 function Home() {
 
 const user = JSON.parse(localStorage.getItem("user"));
   return (
     <>
-      {/* hero section
-       */}
-
+      <section className="hero_section pt-[0px]">
+        <div className="container">
+          <div className="w-full">
+            <ImageSlideshow interval={6000} /> 
+          </div>
+        </div>
+      </section>
       <section className="hero_section pt-[60px] 2xl:h-[800px]">
         <div className="container">
           <div className="flex flex-col lg:flex-row gap-[90px] items-center justify-between">
+  
             {/* hero content */}
             <div>
               <div className="lg:w-[570px]">
@@ -228,12 +233,6 @@ const user = JSON.parse(localStorage.getItem("user"));
   {user && user.role?.toLowerCase() === "admin" && (
   <div className="text-center mt-6 mb-8">
       <div className="flex justify-center gap-4">
-        <Link 
-          to="/admin" 
-          className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
-        >
-          🛠️ Admin Dashboard
-        </Link>
     <Link 
       to="/add-doctor" 
 className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold"    >
@@ -272,12 +271,7 @@ className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 tra
           </div>
         </div>
       </section>
-      {/* faq section ends */}
-
-      {/* testmonia section starts */}
-      {/* testimonia section ends */}
-
-      {/* testimonial section starts */}
+      
 <section className="my-16">
   <div className="container">
     <div className="xl:w-[470px] mx-auto mb-12">
