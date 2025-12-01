@@ -131,7 +131,7 @@ const user = JSON.parse(localStorage.getItem("user"));
                   unmatched,expert health care.from the lab to the clinic
                 </p>
                 <Link
-                  to="/doctors"
+                  to="/book-appointment"
                   className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] mt-[30px] mx-auto flex items-center justify-center group hover:bg-primaryColor"
                 >
                   <BsArrowRight className="group-hover:text-white w-6 h-5" />
@@ -153,7 +153,7 @@ const user = JSON.parse(localStorage.getItem("user"));
                   unmatched,expert health care.from the lab to the clinic
                 </p>
                 <Link
-                  to="/doctors"
+                  to="/book-appointment"
                   className="w-[44px] h-[44px] rounded-full border border-solid border-[#181A1E] mt-[30px] mx-auto flex items-center justify-center group hover:bg-primaryColor"
                 >
                   <BsArrowRight className="group-hover:text-white w-6 h-5" />
@@ -163,7 +163,7 @@ const user = JSON.parse(localStorage.getItem("user"));
           </div>
         </div>
       </section>
-      {/* about section */}
+      
       <About />
 
       {/* services section */}

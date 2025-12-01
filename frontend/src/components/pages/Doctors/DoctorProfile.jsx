@@ -6,13 +6,13 @@ function DoctorProfile() {
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     specialty: '',
     contact: '',
     hospital: '',
     photo: '',
-    // NEW FIELDS:
     bio: '',
     experience: 0,
     ticketPrice: 0,
@@ -44,7 +44,7 @@ function DoctorProfile() {
         }
       });
       
-      // If we get here, profile exists
+      
       setDoctor(response.data);
       setFormData({
         name: response.data.name || '',
@@ -52,7 +52,7 @@ function DoctorProfile() {
         contact: response.data.contact || '',
         hospital: response.data.hospital || '',
         photo: response.data.photo || '',
-        // NEW FIELDS:
+        
         bio: response.data.bio || '',
         experience: response.data.experience || 0,
         ticketPrice: response.data.ticketPrice || 0,
@@ -82,7 +82,7 @@ function DoctorProfile() {
           }));
         }
         
-        // Set empty stats for new users
+       
         setStats({
           totalAppointments: 0,
           upcomingAppointments: 0,
@@ -90,7 +90,7 @@ function DoctorProfile() {
         });
         
       } else {
-        // Real error
+      
         setMessage('Error loading profile: ' + (error.response?.data?.message || error.message));
       }
     } finally {
@@ -109,10 +109,145 @@ function DoctorProfile() {
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching doctor stats:', error);
-      // Don't show error for stats - just use defaults
+     
+    }
+  };
+  const getImageUrl = (photoPath) => {
+    console.log('Photo path received in DoctorProfile:', photoPath); 
+    if (!photoPath) {
+      return null;
+    }
+    
+    // If it's already a full URL, return as is
+    if (photoPath.startsWith('http')) {
+      return photoPath;
+    }
+    
+    // If it starts with /uploads/, prepend with backend URL
+    if (photoPath.startsWith('/uploads/')) {
+      return `http://localhost:5000${photoPath}`;
+    }
+    
+    // If it's just a filename without path, construct the full URL
+    return `http://localhost:5000/uploads/${photoPath}`;
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      setMessage('❌ Please select a valid image file (JPEG, PNG, GIF)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage('❌ Image size should be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    setMessage('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await axios.post(
+        'http://localhost:5000/api/doctors/upload-photo',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Update the photo URL in form data
+      setFormData(prev => ({
+        ...prev,
+        photo: response.data.photoUrl
+      }));
+
+      // If doctor exists, update local state
+      if (doctor) {
+        setDoctor(prev => ({
+          ...prev,
+          photo: response.data.photoUrl
+        }));
+      }
+
+      setMessage('✅ Profile photo uploaded successfully!');
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setMessage('❌ Failed to upload photo: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUploading(false);
     }
   };
 
+const handleRemovePhoto = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    console.log('Attempting to remove photo...');
+    
+    const response = await axios.delete('http://localhost:5000/api/doctors/photo', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    console.log('Remove photo response:', response.data);
+    
+    // Check for success in response
+    if (response.data.success || response.data.message) {
+      // Update local state
+      setFormData(prev => ({
+        ...prev,
+        photo: ''
+      }));
+
+      if (doctor) {
+        setDoctor(prev => ({
+          ...prev,
+          photo: ''
+        }));
+      }
+
+      // Show success message
+      setMessage('✅ Profile photo removed successfully!');
+      
+      // Optional: Show a toast if you're using a toast library
+      // toast.success('Photo removed successfully');
+    } else {
+      throw new Error('Failed to remove photo');
+    }
+    
+  } catch (error) {
+    console.error('Error removing photo:', error);
+    
+    // Get detailed error message
+    const errorMessage = error.response?.data?.message || 
+                         error.response?.data?.error || 
+                         error.message || 
+                         'Failed to remove photo';
+    
+    console.error('Error details:', error.response?.data);
+    
+    // Show error message
+    setMessage('❌ ' + errorMessage);
+    
+    // Optional: Show toast error
+    // toast.error(errorMessage);
+  }
+};
   // Handle basic input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -298,17 +433,43 @@ function DoctorProfile() {
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-lg">
-              {doctor?.photo ? (
-                <img 
-                  src={doctor.photo} 
-                  alt={doctor.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-blue-600 text-4xl font-bold">
-                  {doctor?.name?.charAt(0)?.toUpperCase() || 'D'}
-                </span>
+            {/* Profile Image with Upload Functionality */}
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                {formData.photo ? (
+                  <img 
+                   src={getImageUrl(formData.photo)} 
+                    alt={formData.name}
+                   className="w-full h-full rounded-full object-cover"
+        onError={(e) => {
+          console.error('❌ Image failed to load:', getImageUrl(formData.photo));
+          e.target.style.display = 'none';
+          // You can also set a default avatar here
+        }} />
+                ) : (
+                  <span className="text-blue-600 text-4xl font-bold">
+                    {formData.name?.charAt(0)?.toUpperCase() || 'D'}
+                  </span>
+                )}
+              </div>
+              
+              {/* Upload Overlay - Only show in edit mode */}
+              {(editing || !doctor) && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <label className="cursor-pointer text-white text-center p-2">
+                    <svg className="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-xs">Change</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               )}
             </div>
             <div className="text-center md:text-left">
@@ -396,6 +557,64 @@ function DoctorProfile() {
           </div>
 
           <form onSubmit={handleSubmit}>
+              {/* IMAGE UPLOAD SECTION */}
+            {(editing || !doctor) && (
+              <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Profile Photo</h3>
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-24 h-24 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                      {getImageUrl(formData.photo) ? (
+      <img 
+        src={getImageUrl(formData.photo)} 
+        alt="Profile preview"
+        className="w-full h-full rounded-full object-cover"
+        onError={(e) => {
+          console.error('❌ Preview image failed to load');
+          e.target.style.display = 'none';
+        }} />
+                      ) : (
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-3">
+                        <label className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition duration-200">
+                          {uploading ? 'Uploading...' : 'Choose Image'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={uploading}
+                          />
+                        </label>
+                        
+                        {formData.photo && (
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
+                          >
+                            Remove Photo
+                          </button>
+                        )}
+                      </div>
+                      
+                      <p className="text-sm text-gray-600">
+                        Upload a professional profile photo. Supported formats: JPG, PNG, GIF. Max size: 5MB.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* BASIC INFORMATION */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>

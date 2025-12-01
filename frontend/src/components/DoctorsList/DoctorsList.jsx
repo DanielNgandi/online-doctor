@@ -1,35 +1,6 @@
-
-//import {doctors} from '../../assets/data/doctors'
 import DoctorCard from './DoctorCard'
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-// function DoctorsList({ search }) {
-//     const [doctors, setDoctors] = useState([]);
-
-//   useEffect(() => {
-//     const fetchDoctors = async () => {
-//       try {
-//         const res = await axios.get(`http://localhost:5000/api/doctors`, {
-//           params: { search }
-//         });
-//         setDoctors(res.data);
-//       } catch (error) {
-//         console.error("Error fetching doctors", error);
-//       }
-//     };
-//     fetchDoctors();
-//   }, [search]);
-
-//   return (
-//      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-//    {/*</div> <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 lg:gap-[30px] mt-[30px] lg:mt=[55px]'>*/}
-//          {doctors.map((doctor)=>
-//          <DoctorCard key={doctor.id} doctor={doctor}/>)}
-//     </div>
-
-//   )
-// }
 
 function DoctorsList({ search }) {
     const [doctors, setDoctors] = useState([]);
@@ -42,15 +13,15 @@ function DoctorsList({ search }) {
                 setLoading(true);
                 setError(null);
                 
-                console.log("Fetching doctors with search:", search); // Debug log
+                console.log("Fetching doctors with search:", search);
                 
                 const res = await axios.get(`http://localhost:5000/api/doctors`, {
                     params: { 
-                        search: search || '' // Always send search, even if empty
+                        search: search || '' 
                     }
                 });
                 
-                console.log("Doctors response:", res.data); // Debug log
+                console.log("Doctors response:", res.data); 
                 setDoctors(res.data);
                 
             } catch (error) {
@@ -62,7 +33,7 @@ function DoctorsList({ search }) {
             }
         };
         
-        // ALWAYS fetch doctors, regardless of search value
+        
         fetchDoctors();
         
     }, [search]); // This will refetch when search changes
