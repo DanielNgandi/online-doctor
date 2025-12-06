@@ -23,38 +23,100 @@ function TestimonialPage() {
     fetchTestimonials()
   }, [])
 
-  const fetchTestimonials = async () => {
-    try {
-      const data = await getTestimonials()
-      // Handle both response formats
-      setTestimonials(data.testimonials || data || [])
-    } catch (error) {
-      console.error('Error fetching testimonials:', error)
-      setTestimonials([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault()
+ const fetchTestimonials = async () => {
+  try {
+    console.log('🔄 Fetching all testimonials...');
     
-    if (!user) {
-      alert('Please login to submit a testimonial')
-      return
+    // Add status parameter to get both APPROVED and PENDING testimonials
+    const response = await getTestimonials({ 
+      limit: 20,
+      // Add this parameter if your backend supports filtering by status
+      // status: 'APPROVED,PENDING' // Or however your API expects it
+    });
+    
+    console.log('📥 FULL Received response:', response);
+    console.log('📊 Response data structure:', {
+      testimonials: response.testimonials,
+      total: response.total,
+      totalPages: response.totalPages,
+      currentPage: response.currentPage
+    });
+    
+    // Check if testimonials exist in the response
+    if (response && response.testimonials && Array.isArray(response.testimonials)) {
+      console.log('✅ Found testimonials array with', response.testimonials.length, 'items');
+      
+      // Log each testimonial for debugging
+      response.testimonials.forEach((testimonial, index) => {
+        console.log(`📝 Testimonial ${index + 1}:`, {
+          id: testimonial.id,
+          comment: testimonial.comment,
+          rating: testimonial.rating,
+          status: testimonial.status,
+          patient: testimonial.patient?.name,
+          doctor: testimonial.doctor?.name,
+          createdAt: testimonial.createdAt
+        });
+      });
+      
+      setTestimonials(response.testimonials);
+    } else {
+      console.log('❌ No testimonials array found in response');
+      console.log('📋 Response keys:', Object.keys(response || {}));
+      setTestimonials([]);
     }
+    
+  } catch (error) {
+    console.error('❌ Error fetching testimonials:', error);
+    console.error('🔧 Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    setTestimonials([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      await submitTestimonial(userReview)
-      setUserReview({ rating: 5, comment: '', doctorId: '' })
-      fetchTestimonials() // Refresh the list
-      alert('Thank you for your feedback! Your review is pending approval.')
-    } catch (error) {
-      console.error('Error submitting review:', error)
-      alert('Error submitting review. Please try again.')
-    }
+ // Update the handleSubmitReview function in TestimonialPage.jsx
+const handleSubmitReview = async (e) => {
+  e.preventDefault()
+  
+  if (!user) {
+    alert('Please login to submit a testimonial')
+    return
   }
 
+  if (!userReview.comment.trim() || userReview.comment.length < 10) {
+    alert('Please write a review with at least 10 characters')
+    return
+  }
+
+  try {
+    await submitTestimonial(userReview)
+    setUserReview({ rating: 5, comment: '', doctorId: '' })
+    fetchTestimonials() // Refresh the list
+    alert('Thank you for your feedback! Your testimonial is pending approval.')
+  } catch (error) {
+    console.error('Error submitting testimonial:', error)
+    alert(error.response?.data?.message || 'Error submitting testimonial. Please try again.')
+  }
+}
+
+// Add this inside your TestimonialPage component, before the return statement
+useEffect(() => {
+  console.log('🎯 Current testimonials state updated:', {
+    count: testimonials.length,
+    items: testimonials.map(t => ({
+      id: t.id,
+      comment: t.comment?.substring(0, 30) + '...',
+      status: t.status,
+      hasPatient: !!t.patient,
+      hasDoctor: !!t.doctor
+    }))
+  });
+}, [testimonials]);
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => (
       <HiStar

@@ -16,17 +16,19 @@ function Testimonial() {
     fetchTestimonials()
   }, [])
 
-  const fetchTestimonials = async () => {
-    try {
-      const data = await getTestimonials({ limit: 6 })
-      setTestimonials(data.testimonials || data || [])
-    } catch (error) {
-      console.error('Error fetching testimonials:', error)
-      setTestimonials([])
-    } finally {
-      setLoading(false)
-    }
+  // Update fetchTestimonials function in Testimonial.jsx
+const fetchTestimonials = async () => {
+  try {
+    const data = await getTestimonials({ limit: 6 })
+    
+    setTestimonials(data.testimonials || [])
+  } catch (error) {
+    console.error('Error fetching testimonials:', error)
+    setTestimonials([])
+  } finally {
+    setLoading(false)
   }
+}
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => (

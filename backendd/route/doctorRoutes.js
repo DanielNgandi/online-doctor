@@ -119,6 +119,7 @@ router.get("/profile", protect, checkRole(['doctor']), getDoctorProfile);
 router.put("/profile", protect, checkRole(['doctor']), updateDoctorProfile);
 router.get("/stats", protect, checkRole(['doctor']), getDoctorStats);
 router.get("/", getAllDoctorsPublic );
+//router.get('/doctors/update-stats', updateAllDoctorsStats);
 router.get("/:id", getDoctorById); 
 router.get("/appointments", protect, checkRole(["doctor"]), getDoctorAppointments);
 router.patch("/appointments/:id", protect, checkRole(["doctor"]), updateAppointmentStatus);

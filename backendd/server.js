@@ -5,6 +5,7 @@ import path from 'path';
 import authRoutes from "./route/authRoutes.js";
 import patientRoutes from "./route/patientRoutes.js";
 import doctorRoutes from "./route/doctorRoutes.js";
+import testimonialRoutes from "./route/TestimonialRoutes.js";
 import adminRoutes from "./route/adminRoutes.js";
 import appointmentRoutes from "./route/appointmentRoutes.js";
 import { fileURLToPath } from 'url';
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/testimonials", testimonialRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/appointments", appointmentRoutes);
 

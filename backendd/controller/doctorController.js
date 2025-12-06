@@ -362,7 +362,7 @@ export const getDoctorAppointments = async (req, res) => {
     });
 
     if (!doctor) {
-      return res.json([]); // Return empty array if no profile
+      return res.json([]); 
     }
 
     const appointments = await prisma.appointment.findMany({
@@ -381,7 +381,7 @@ export const updateAppointmentStatus = async (req, res) => {
   const { status } = req.body;
   
   try {
-    // Find doctor by userId
+   
     const doctor = await prisma.doctor.findFirst({
       where: { userId: req.user.userId },
     });
@@ -390,7 +390,7 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(404).json({ message: "Doctor profile not found" });
     }
 
-    // Verify the appointment belongs to this doctor
+  
     const appointment = await prisma.appointment.findFirst({
       where: { 
         id: Number(id),
@@ -414,7 +414,6 @@ export const updateAppointmentStatus = async (req, res) => {
   }
 };
 
-// Get all doctors for public view - UPDATED
 export const getAllDoctorsPublic = async (req, res) => {
     try {
         const { search } = req.query;
@@ -434,45 +433,79 @@ export const getAllDoctorsPublic = async (req, res) => {
         const doctors = await prisma.doctor.findMany({
             where: whereClause,
             include: {
-                educations: true,
-                workExperiences: true,
-                timeSlots: true,
                 user: {
                     select: {
                         email: true
                     }
-                }
+                },
+                educations: true,
+                workExperiences: true,
+                timeSlots: true
             }
         });
 
-        console.log("Found doctors:", doctors.length);
+        console.log(`Found ${doctors.length} doctors in database`);
 
-        // Transform the data for frontend
-        const doctorsWithFormattedData = doctors.map(doctor => ({
-            id: doctor.id,
-            name: doctor.name,
-            specialty: doctor.specialty,
-            photo: doctor.photo || "/default-doctor.jpg",
-            hospital: doctor.hospital,
-            contact: doctor.contact,
-            averageRating: doctor.avgRating || 0,
-            totalReviews: doctor.totalRating || 0,
-            experience: doctor.experience || 0,
-            bio: doctor.bio || `Specialist in ${doctor.specialty}`,
-            ticketPrice: doctor.ticketPrice || 0,
-            // Use relational data directly
-            education: doctor.educations,
-            qualifications: doctor.workExperiences, // For backward compatibility
-            workExperiences: doctor.workExperiences,
-            timeSlots: doctor.timeSlots.map(slot => ({
-                day: slot.dayOfWeek,
-                time: `${slot.startTime} - ${slot.endTime}`,
-                startTime: slot.startTime,
-                endTime: slot.endTime
-            }))
+        // Format the data for frontend
+        const formattedDoctors = await Promise.all(doctors.map(async (doctor) => {
+            // Get testimonials for this doctor
+            const testimonials = await prisma.testimonial.findMany({
+                where: {
+                    doctorId: doctor.id,
+                    status: { in: ['APPROVED', 'PENDING'] }
+                }
+            });
+
+            // Calculate statistics from testimonials
+            const totalReviews = testimonials.length;
+            const avgRating = totalReviews > 0 
+                ? testimonials.reduce((sum, t) => sum + t.rating, 0) / totalReviews
+                : 0;
+
+            // Get total patients from appointments
+            const appointments = await prisma.appointment.findMany({
+                where: { doctorId: doctor.id },
+                distinct: ['patientId']
+            });
+            const totalPatients = appointments.length;
+
+            return {
+                id: doctor.id,
+                name: doctor.name,
+                specialty: doctor.specialty,
+                photo: doctor.photo || "/default-doctor.jpg",
+                hospital: doctor.hospital,
+                contact: doctor.contact,
+                // Use calculated values
+                avgRating: parseFloat(avgRating.toFixed(1)),
+                totalRating: totalReviews, // This should be total reviews
+                totalReviews: totalReviews,
+                totalPatients: totalPatients,
+                experience: doctor.experience || 0,
+                bio: doctor.bio || `Specialist in ${doctor.specialty}`,
+                ticketPrice: doctor.ticketPrice || 0,
+                education: doctor.educations,
+                qualifications: doctor.workExperiences,
+                workExperiences: doctor.workExperiences,
+                timeSlots: doctor.timeSlots.map(slot => ({
+                    day: slot.dayOfWeek,
+                    time: `${slot.startTime} - ${slot.endTime}`,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime
+                })),
+                email: doctor.user?.email
+            };
         }));
 
-        res.status(200).json(doctorsWithFormattedData);
+        console.log(`✅ Returning ${formattedDoctors.length} doctors`);
+        console.log('Sample doctor data:', formattedDoctors[0] ? {
+            name: formattedDoctors[0].name,
+            avgRating: formattedDoctors[0].avgRating,
+            totalRating: formattedDoctors[0].totalRating,
+            totalPatients: formattedDoctors[0].totalPatients
+        } : 'No doctors found');
+        
+        res.status(200).json(formattedDoctors);
         
     } catch (error) {
         console.error("Error in getAllDoctorsPublic:", error);
@@ -482,8 +515,6 @@ export const getAllDoctorsPublic = async (req, res) => {
         });
     }
 };
-
-// Get doctor by ID - UPDATED
 export const getDoctorById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -519,9 +550,28 @@ export const getDoctorById = async (req, res) => {
             });
         }
 
-        console.log("Found doctor:", doctor.name);
+        // Calculate ratings from testimonials
+        const testimonials = await prisma.testimonial.findMany({
+            where: {
+                doctorId: parseInt(id),
+                status: { in: ['APPROVED', 'PENDING'] } 
+            },
+            select: {
+                rating: true,
+                   status: true
+            }
+        });
 
-        // Transform the data for frontend
+        // Calculate average rating and total reviews
+        let averageRating = 0;
+        let totalReviews = 0;
+        
+        if (testimonials.length > 0) {
+            const totalRating = testimonials.reduce((sum, t) => sum + t.rating, 0);
+            averageRating = totalRating / testimonials.length;
+            totalReviews = testimonials.length;
+        }
+
         const doctorData = {
             id: doctor.id,
             name: doctor.name,
@@ -529,15 +579,16 @@ export const getDoctorById = async (req, res) => {
             photo: doctor.photo || "/default-doctor.jpg",
             hospital: doctor.hospital,
             contact: doctor.contact,
-            averageRating: doctor.avgRating || 0,
-            totalReviews: doctor.totalRating || 0,
+            // Updated fields:
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            totalReviews: totalReviews,
             totalPatients: doctor.totalPatients || 0,
             experience: doctor.experience || 0,
             bio: doctor.bio || `Specialist in ${doctor.specialty}`,
             ticketPrice: doctor.ticketPrice || 0,
-            // Use relational data directly
+            
             education: doctor.educations,
-            qualifications: doctor.workExperiences, // For backward compatibility
+            qualifications: doctor.workExperiences, 
             workExperiences: doctor.workExperiences,
             timeSlots: doctor.timeSlots.map(slot => ({
                 day: slot.dayOfWeek,
@@ -563,9 +614,8 @@ export const getDoctorById = async (req, res) => {
 function formatTime(timeString) {
     if (!timeString) return "09:00";
     
-    // Handle various time formats
     if (timeString.includes(':')) {
-        // Already in HH:MM format
+        
         const [hours, minutes] = timeString.split(':');
         return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
     }
@@ -573,21 +623,21 @@ function formatTime(timeString) {
     // Handle AM/PM format
     const time = new Date(`2000-01-01 ${timeString}`);
     if (!isNaN(time.getTime())) {
-        return time.toTimeString().slice(0, 5); // Returns "09:00"
+        return time.toTimeString().slice(0, 5); 
     }
     
-    return "09:00"; // Default fallback
+    return "09:00"; 
 }
-// Add to doctorsController.js
 export const getDoctorReviews = async (req, res) => {
   try {
     const { id } = req.params
     const { page = 1, limit = 5 } = req.query
 
+    // Get ALL testimonials (APPROVED + PENDING)
     const reviews = await prisma.testimonial.findMany({
       where: {
         doctorId: parseInt(id),
-        status: 'APPROVED'
+        status: { in: ['APPROVED', 'PENDING'] } // Changed to include both
       },
       include: {
         patient: {
@@ -604,23 +654,23 @@ export const getDoctorReviews = async (req, res) => {
       take: parseInt(limit)
     })
 
-    // Calculate rating distribution
+    // Calculate rating distribution from ALL testimonials
     const ratingDistribution = await prisma.testimonial.groupBy({
       by: ['rating'],
       where: {
         doctorId: parseInt(id),
-        status: 'APPROVED'
+        status: { in: ['APPROVED', 'PENDING'] } // Changed to include both
       },
       _count: {
         rating: true
       }
     })
 
-    // Calculate average rating and total reviews
+    // Calculate stats from ALL testimonials
     const ratingStats = await prisma.testimonial.aggregate({
       where: {
         doctorId: parseInt(id),
-        status: 'APPROVED'
+        status: { in: ['APPROVED', 'PENDING'] } // Changed to include both
       },
       _avg: {
         rating: true
@@ -629,6 +679,8 @@ export const getDoctorReviews = async (req, res) => {
         rating: true
       }
     })
+
+    console.log(`Found ${reviews.length} reviews for doctor ${id} (APPROVED + PENDING)`)
 
     res.json({
       reviews,
@@ -643,17 +695,28 @@ export const getDoctorReviews = async (req, res) => {
     res.status(500).json({ message: "Server error fetching doctor reviews" })
   }
 }
-
 export const submitDoctorReview = async (req, res) => {
   try {
     const { id } = req.params
     const { rating, comment } = req.body
     const userId = req.user.userId
 
+    const patient = await prisma.patient.findFirst({
+      where: { userId: userId }
+    })
+
+    if (!patient) {
+      return res.status(400).json({ 
+        message: "Patient profile not found. Please complete your patient profile first." 
+      })
+    }
+
+    const patientId = patient.id
+
     // Verify user has completed appointment with this doctor
     const appointment = await prisma.appointment.findFirst({
       where: {
-        patientId: userId,
+        patientId: patientId,  
         doctorId: parseInt(id),
         status: 'COMPLETED'
       }
@@ -668,7 +731,7 @@ export const submitDoctorReview = async (req, res) => {
     // Check if user already reviewed this doctor
     const existingReview = await prisma.testimonial.findFirst({
       where: {
-        patientId: userId,
+        patientId: patientId,  
         doctorId: parseInt(id)
       }
     })
@@ -683,7 +746,7 @@ export const submitDoctorReview = async (req, res) => {
       data: {
         rating: parseInt(rating),
         comment: comment.trim(),
-        patientId: userId,
+        patientId: patientId,  
         doctorId: parseInt(id),
         status: 'PENDING'
       },
@@ -706,3 +769,49 @@ export const submitDoctorReview = async (req, res) => {
     res.status(500).json({ message: "Server error submitting review" })
   }
 }
+// export const updateAllDoctorsStats = async (req, res) => {
+//   try {
+//     const doctors = await prisma.doctor.findMany();
+    
+//     for (const doctor of doctors) {
+//       // Get all APPROVED testimonials
+//       const approvedTestimonials = await prisma.testimonial.findMany({
+//         where: {
+//           doctorId: doctor.id,
+//           status: 'APPROVED'
+//         }
+//       });
+
+//       // Get distinct patients from appointments
+//       const appointments = await prisma.appointment.findMany({
+//         where: { doctorId: doctor.id }
+//       });
+//       const uniquePatientIds = [...new Set(appointments.map(a => a.patientId))];
+//       const totalPatients = uniquePatientIds.length;
+
+//       // Calculate stats
+//       const totalReviews = approvedTestimonials.length;
+//       const avgRating = totalReviews > 0 
+//         ? approvedTestimonials.reduce((sum, t) => sum + t.rating, 0) / totalReviews
+//         : 0;
+
+//       // Update doctor
+//       await prisma.doctor.update({
+//         where: { id: doctor.id },
+//         data: {
+//           avgRating: parseFloat(avgRating.toFixed(1)),
+//           totalRating: totalReviews,
+//           totalReviews: totalReviews,
+//           totalPatients: totalPatients
+//         }
+//       });
+
+//       console.log(`Updated doctor ${doctor.name}: rating=${avgRating.toFixed(1)}, reviews=${totalReviews}, patients=${totalPatients}`);
+//     }
+
+//     res.json({ message: "All doctors stats updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating doctors stats:", error);
+//     res.status(500).json({ message: "Error updating doctors stats" });
+//   }
+// };

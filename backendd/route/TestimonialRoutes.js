@@ -1,9 +1,25 @@
-// Testimonial routes
-app.get('/testimonials', getTestimonials)
-app.post('/testimonials', auth, submitTestimonial)
-app.get('/doctors/:id/reviews', getDoctorReviews)
-app.post('/doctors/:id/reviews', auth, submitDoctorReview)
+// backend/routes/testimonialRoutes.js
+import express from 'express'
+import { 
+  getTestimonials, 
+  submitTestimonial,
+  getDoctorTestimonials,
+  getPendingTestimonials,
+  updateTestimonialStatus 
+} from '../controller/testimonialController.js'
+import { protect, checkRole } from '../middlewares/AuthMiddleware.js'
+
+const router = express.Router()
+
+// Public routes
+router.get('/', getTestimonials) // Get all approved testimonials
+router.get('/doctors/:id', getDoctorTestimonials) // Get doctor-specific testimonials
+
+// Protected routes - Patients can submit testimonials
+router.post('/', protect, checkRole(['patient']), submitTestimonial)
 
 // Admin routes
-app.get('/admin/testimonials/pending', auth, adminAuth, getPendingTestimonials)
-app.patch('/admin/testimonials/:id/status', auth, adminAuth, updateTestimonialStatus)
+router.get('/pending', protect, checkRole(['admin']), getPendingTestimonials)
+router.patch('/:id/status', protect, checkRole(['admin']), updateTestimonialStatus)
+
+export default router

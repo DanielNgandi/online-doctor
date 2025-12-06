@@ -14,6 +14,28 @@ function DoctorsDetail() {
   const [error, setError] = useState(null)
   const { id } = useParams()
 
+
+   // Add the getImageUrl function here
+  const getImageUrl = (photoPath) => {
+    console.log('Photo path received in DoctorsDetail:', photoPath); 
+    if (!photoPath) {
+      return doctorImg; // Fallback to default image
+    }
+    
+    // If it's already a full URL, return as is
+    if (photoPath.startsWith('http')) {
+      return photoPath;
+    }
+    
+    // If it starts with /uploads/, prepend with backend URL
+    if (photoPath.startsWith('/uploads/')) {
+      return `http://localhost:5000${photoPath}`;
+    }
+    
+    // If it's just a filename without path, construct the full URL
+    return `http://localhost:5000/uploads/${photoPath}`;
+  };
+
   useEffect(() => {
     const fetchDoctor = async () => {
       try {
@@ -80,7 +102,7 @@ function DoctorsDetail() {
       </section>
     )
   }
-
+const imageUrl = getImageUrl(doctor.photo);
   return (
     <section>
       <div className="max-w-[1170px] px-5 mx-auto">
@@ -89,9 +111,14 @@ function DoctorsDetail() {
             <div className="flex items-center gap-5">
               <figure className='max-w-[200px] max-h-[200px]'>
                 <img 
-                  src={doctor.photo} 
+                  src={imageUrl} 
                   alt={doctor.name} 
-                  className='w-full h-full object-cover rounded-lg' 
+                  className='w-full h-full object-cover rounded-lg'
+                  onError={(e) => {
+                    console.error('❌ Image failed to load:', imageUrl);
+                    e.target.src = doctorImg; // Fallback to default image
+                  }}
+                  onLoad={() => console.log('✅ Image loaded successfully:', imageUrl)}
                 />
               </figure>
               <div>

@@ -11,7 +11,7 @@ function BookAppointment() {
   const [loading, setLoading] = useState(false);
   const [hasPatientProfile, setHasPatientProfile] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(true);
-    // Check if patient profile exists
+    
   useEffect(() => {
     const checkPatientProfile = async () => {
       const token = localStorage.getItem("token");
@@ -41,8 +41,10 @@ function BookAppointment() {
       } catch (err) {
         if (err.response?.status === 404) {
           setHasPatientProfile(false);
+          setPatientId("");
         } else {
           console.error("Error checking patient profile:", err);
+          setHasPatientProfile(false);
         }
       } finally {
         setCheckingProfile(false);

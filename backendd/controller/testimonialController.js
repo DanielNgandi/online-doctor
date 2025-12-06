@@ -10,7 +10,7 @@ export const getTestimonials = async (req, res) => {
       whereClause.doctorId = parseInt(doctorId)
     }
     
-    whereClause.status = 'APPROVED' // Only show approved testimonials
+    whereClause.status = { in: ['APPROVED', 'PENDING'] }
 
     const testimonials = await prisma.testimonial.findMany({
       where: whereClause,
@@ -54,41 +54,96 @@ export const getTestimonials = async (req, res) => {
 export const submitTestimonial = async (req, res) => {
   try {
     const { rating, comment, doctorId } = req.body
-    const userId = req.user?.userId
+    
+    const userId = req.user?.id || req.user?.userId
 
-    // Validate rating
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: "Rating must be between 1 and 5" })
     }
-
     if (!comment || comment.trim().length < 10) {
       return res.status(400).json({ message: "Comment must be at least 10 characters long" })
     }
+    
+    let patient = await prisma.patient.findFirst({
+      where: { userId: parseInt(userId) }
+    });
 
-    // Check if user has an appointment with the doctor (if doctorId provided)
+    if (!patient) {
+      console.log("PATIENT NOT FOUND!");
+      
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(userId) }
+      });
+      
+      const allPatients = await prisma.patient.findMany({
+        select: { id: true, name: true, userId: true }
+      });
+      
+      return res.status(400).json({ 
+        message: "Patient profile not found. Please complete your patient profile first." 
+      })
+    }
+
+    console.log("✅ Found patient:", { 
+      id: patient.id, 
+      name: patient.name, 
+      userId: patient.userId 
+    });
+
+    const patientId = patient.id
+
     if (doctorId) {
-      const appointment = await prisma.appointment.findFirst({
+      
+      let appointment = await prisma.appointment.findFirst({
         where: {
-          patientId: userId,
+          patientId: patientId,
           doctorId: parseInt(doctorId),
           status: 'COMPLETED'
         }
       })
 
+      console.log("19. COMPLETED appointment found?", !!appointment);
+      console.log("    Appointment details:", appointment);
+
+      // If no COMPLETED, check for any appointment
       if (!appointment) {
+        console.log("20. No COMPLETED appointment, checking for any appointment...");
+        appointment = await prisma.appointment.findFirst({
+          where: {
+            patientId: patientId,
+            doctorId: parseInt(doctorId)
+          }
+        });
+        console.log("    Appointment details:", appointment);
+      }
+
+      if (!appointment) {
+        console.log(" NO APPOINTMENT FOUND AT ALL!");
+      
+        const patientAppointments = await prisma.appointment.findMany({
+          where: { patientId: patientId },
+          include: {
+            doctor: {
+              select: { id: true, name: true }
+            }
+          }
+        });
+              
         return res.status(400).json({ 
-          message: "You can only review doctors you've had appointments with" 
+          message: `You don't have any appointments with this doctor. Please book an appointment first.` 
         })
       }
-    }
+          }
 
+    console.log("22. Creating testimonial...");
+    
     const testimonial = await prisma.testimonial.create({
       data: {
         rating: parseInt(rating),
         comment: comment.trim(),
-        patientId: userId,
+        patientId: patientId,
         doctorId: doctorId ? parseInt(doctorId) : null,
-        status: 'PENDING' // Admin approval required
+        status: 'PENDING'
       },
       include: {
         patient: {
@@ -105,16 +160,21 @@ export const submitTestimonial = async (req, res) => {
       }
     })
 
+    console.log("✅ Testimonial created successfully! ID:", testimonial.id);
+    
     res.status(201).json({
       message: "Thank you for your feedback! Your review is pending approval.",
       testimonial
     })
   } catch (error) {
-    console.error("Error submitting testimonial:", error)
-    res.status(500).json({ message: "Server error submitting testimonial" })
+    console.error("    Error message:", error.message);
+  
+    res.status(500).json({ 
+      message: "Server error submitting testimonial",
+      error: error.message 
+    })
   }
 }
-
 export const getDoctorTestimonials = async (req, res) => {
   try {
     const { id } = req.params
@@ -123,8 +183,9 @@ export const getDoctorTestimonials = async (req, res) => {
     const testimonials = await prisma.testimonial.findMany({
       where: {
         doctorId: parseInt(id),
-        status: 'APPROVED'
-      },
+         status: {
+    in: ['APPROVED', 'PENDING'] 
+  }},
       include: {
         patient: {
           select: {
@@ -154,6 +215,8 @@ export const getDoctorTestimonials = async (req, res) => {
       }
     })
 
+    console.log(`Found ${testimonials.length} testimonials for doctor ${id}`)
+
     res.json({
       testimonials,
       averageRating: ratingStats._avg.rating || 0,
@@ -163,10 +226,12 @@ export const getDoctorTestimonials = async (req, res) => {
     })
   } catch (error) {
     console.error("Error fetching doctor testimonials:", error)
-    res.status(500).json({ message: "Server error fetching doctor testimonials" })
+    res.status(500).json({ 
+      message: "Server error fetching doctor testimonials",
+      error: error.message 
+    })
   }
 }
-
 // Admin functions
 export const getPendingTestimonials = async (req, res) => {
   try {
@@ -215,11 +280,50 @@ export const updateTestimonialStatus = async (req, res) => {
         },
         doctor: {
           select: {
+            id: true,
             name: true
           }
         }
       }
     })
+
+    // Update doctor's ratings if testimonial has a doctor
+    if (testimonial.doctorId && testimonial.doctor) {
+      // Get all APPROVED testimonials for this doctor
+      const approvedTestimonials = await prisma.testimonial.findMany({
+        where: {
+          doctorId: testimonial.doctorId,
+          status: 'APPROVED'
+        },
+        select: {
+          rating: true
+        }
+      });
+
+      // Get total patients from appointments
+      const appointments = await prisma.appointment.findMany({
+        where: { doctorId: testimonial.doctorId },
+        distinct: ['patientId']
+      });
+      const totalPatients = appointments.length;
+
+      // Calculate new average and total
+      const totalReviews = approvedTestimonials.length;
+      const avgRating = totalReviews > 0 
+        ? approvedTestimonials.reduce((sum, t) => sum + t.rating, 0) / totalReviews
+        : 0;
+
+      // Update doctor's ratings
+      await prisma.doctor.update({
+        where: { id: testimonial.doctorId },
+        data: {
+          avgRating: parseFloat(avgRating.toFixed(1)),
+          totalRating: totalReviews,
+          totalReviews: totalReviews,
+          totalPatients: totalPatients
+        }
+      });
+    }
 
     res.json({
       message: `Testimonial ${status.toLowerCase()} successfully`,
