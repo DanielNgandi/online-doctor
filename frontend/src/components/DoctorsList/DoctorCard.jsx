@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 function DoctorCard({ doctor }) {
   useEffect(() => {
-    console.log('🎯 DoctorCard received:', {
+    console.log('DoctorCard received:', {
       id: doctor.id,
       name: doctor.name,
       avgRating: doctor.avgRating,
@@ -73,6 +73,15 @@ const imageUrl = getImageUrl(photo);
             </span>
           </div>
         )}
+      </div>
+      
+      <div className="text-center mb-4">
+        <h3 className="text-xl font-bold text-headingColor mb-1">
+          Dr. {name}
+        </h3>
+        <p className="text-sm text-gray-500">
+          {specialty}
+        </p>
       </div>
       
       {/* Specialty and Rating */}

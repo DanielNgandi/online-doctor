@@ -3,24 +3,29 @@ import { useAuth } from '../context/AuthContext';
 import logo from "../../assets/images/logo.png";
 import userImg from "../../assets/images/avatar-icon.png";
 import { NavLink, Link } from "react-router-dom";
-import { BiMenu } from "react-icons/bi";
+//import "../../App.css";
+import { BiMenu,BiCalendar, BiHomeAlt, BiUser,BiBriefcase, BiEnvelope,BiCalendarPlus,BiUserCircle,BiLogOut,BiLogIn,BiStar } from "react-icons/bi";
 
 const navLinks = [
   {
     path: "/home",
     display: "Home",
+    icon: <BiHomeAlt />
   },
   {
     path: "/doctors",
     display: "Doctor",
+    icon: <BiUser />
   },
   {
     path: "/services",
     display: "Services",
+    icon: <BiBriefcase />
   },
   {
     path: "/contact",
     display: "Contact",
+    icon: <BiEnvelope />
   },
 ];
 
@@ -29,9 +34,8 @@ function Header() {
   const headerRef = useRef(null);
   const menuRef = useRef(null);
 
-
   const getAppointmentPath = () => {
-     if (user?.role === "patient") {
+    if (user?.role === "patient") {
       return "/patient/my-appointments";
     } else if (user?.role === "doctor") {
       return "/doctor/my-appointments";
@@ -41,13 +45,13 @@ function Header() {
     return "/appointments";
   };
 
-   const getProfilePath = () => {
+  const getProfilePath = () => {
     if (user?.role === "patient") {
       return "/patient-profile";
     } else if (user?.role === "doctor") {
       return "/doctor-profile";
     } else if (user?.role === "admin") {
-      return "/admin/profile"; 
+      return "/admin/profile";
     }
     return "/profile";
   };
@@ -77,20 +81,34 @@ function Header() {
     window.location.href = "/login";
   };
 
+  const formatUsername = (username) => {
+    if (!username) return "User";
+    const parts = username.trim().split(/\s+/);
+    if (parts.length === 1) {
+      return parts[0];
+    }
+    return parts[0];
+  };
+
+  const getAvatarInitial = (username) => {
+    if (!username) return "U";
+    return username.charAt(0).toUpperCase();
+  };
+
   return (
-    <header className="header flex items-center" ref={headerRef}>
+    <header className="header flex items-center py-3" ref={headerRef}>
       <div className="container">
         <div className="flex items-center justify-between">
-          {/* logo */}
-          <div>
+          {/* logo - make it smaller */}
+          <div className="w-28 lg:w-40 flex-shrink-0">
             <Link to="/home">
-              <img src={logo} alt="Logo" />
+              <img src={logo} alt="Logo" className="w-full h-auto" />
             </Link>
           </div>
 
-          {/* menu */}
-          <div className="navigation flex-1 mx-2 lg:mx-4" ref={menuRef} onClick={toggleMenu}>
-            <ul className="menu flex items-center gap-[1rem] lg:gap-[1.5rem] xl:gap-[2.7rem] flex-nowrap overflow-x-auto">
+          {/* menu - reduced spacing */}
+          <div className="navigation flex-1 mx-2 lg:mx-3" ref={menuRef} onClick={toggleMenu}>
+            <ul className="menu flex items-center gap-1 lg:gap-2 xl:gap-3 flex-nowrap overflow-x-auto">
               {/* Always show these navigation links */}
               {navLinks.map((link, index) => (
                 <li key={index} className="flex-shrink-0">
@@ -98,15 +116,16 @@ function Header() {
                     to={link.path}
                     className={(navClass) =>
                       navClass.isActive
-                        ? "text-primaryColor text-[16px] leading-7 font-[600]whitespace-nowrap"
-                        : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
+                        ? "text-primaryColor text-xs lg:text-sm font-[600] whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded"
+                        : "text-textColor text-xs lg:text-sm font-[500] hover:text-primaryColor whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded hover:bg-gray-50"
                     }
                   >
-                    {link.display}
+                    <span className="text-base lg:text-lg">{link.icon}</span>
+                    <span>{link.display}</span>
                   </NavLink>
                 </li>
               ))}
-              
+
               {/* Show these only when user is logged in */}
               {user ? (
                 <>
@@ -116,14 +135,16 @@ function Header() {
                       to={getAppointmentPath()}
                       className={(navClass) =>
                         navClass.isActive
-                          ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
-                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
+                          ? "text-primaryColor text-xs lg:text-sm font-[600] whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded"
+                          : "text-textColor text-xs lg:text-sm font-[500] hover:text-primaryColor whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded hover:bg-gray-50"
                       }
                     >
-                      Appointments
+                      <BiCalendar className="text-base lg:text-lg" />
+                      <span className="hidden xs:inline">Appointments</span>
+                      <span className="xs:hidden">Apps</span>
                     </NavLink>
                   </li>
-                  
+
                   {/* Book Appointment - only for patients */}
                   {user.role === 'patient' && (
                     <li className="flex-shrink-0">
@@ -131,29 +152,40 @@ function Header() {
                         to="/book-appointment"
                         className={(navClass) =>
                           navClass.isActive
-                            ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
-                            : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
+                            ? "text-primaryColor text-xs lg:text-sm font-[600] whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded"
+                            : "text-textColor text-xs lg:text-sm font-[500] hover:text-primaryColor whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded hover:bg-gray-50"
                         }
                       >
-                        Book
+                        <BiCalendarPlus className="text-base lg:text-lg" />
+                        <span>Book</span>
                       </NavLink>
                     </li>
                   )}
-                  <Link to="/testimonials" className="text-textColor hover:text-primary">
-  Testimonials
-</Link>
-                  
-                  {/* Profile links */}
+
+                  {/* Testimonials */}
+                  <li className="flex-shrink-0">
+                    <Link
+                      to="/testimonials"
+                      className="text-textColor text-xs lg:text-sm font-[500] hover:text-primaryColor whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded hover:bg-gray-50"
+                    >
+                      <BiStar className="text-base lg:text-lg" />
+                      <span className="hidden xs:inline">Testimonials</span>
+                      <span className="xs:hidden">Reviews</span>
+                    </Link>
+                  </li>
+
+                  {/* Profile link */}
                   <li className="flex-shrink-0">
                     <NavLink
-                      to={getProfilePath()} 
+                      to={getProfilePath()}
                       className={(navClass) =>
                         navClass.isActive
-                          ? "text-primaryColor text-[16px] leading-7 font-[600] whitespace-nowrap"
-                          : "text-textColor text-[16px] leading-7 font-[500] hover:text-primaryColor whitespace-nowrap"
+                          ? "text-primaryColor text-xs lg:text-sm font-[600] whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded"
+                          : "text-textColor text-xs lg:text-sm font-[500] hover:text-primaryColor whitespace-nowrap flex items-center gap-1 px-1.5 py-1 rounded hover:bg-gray-50"
                       }
                     >
-                      Profile
+                      <BiUserCircle className="text-base lg:text-lg" />
+                      <span>Profile</span>
                     </NavLink>
                   </li>
                 </>
@@ -161,55 +193,57 @@ function Header() {
             </ul>
           </div>
 
-          {/* nav right */}
-          <div className="flex items-center gap-4">
+          {/* nav right - compact layout */}
+          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
             {user ? (
-              
-              <div className="flex items-center gap-4">
-                {/* User Profile with avatar */}
-                <Link 
+              <div className="flex items-center gap-2 lg:gap-3">
+                {/* User Profile with avatar - hide username on small screens */}
+                <Link
                   to={getProfilePath()}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-1 lg:gap-2 hover:opacity-80 transition-opacity"
                 >
-                  <figure className="w-[35px] h-[35px] rounded-full cursor-pointer bg-primaryColor flex items-center justify-center border-2 border-white shadow-md">
-                    <span className="text-white font-semibold text-sm">
-                      {user.username?.charAt(0).toUpperCase()}
+                  <figure className="w-7 h-7 lg:w-8 lg:h-8 rounded-full cursor-pointer bg-primaryColor flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0">
+                    <span className="text-white font-semibold text-xs">
+                      {getAvatarInitial(user.username)}
                     </span>
                   </figure>
-                  <span className="hidden md:block text-textColor text-[16px] font-[500]">
-                    {user.username}
+                  <span className="hidden lg:block text-textColor text-sm font-[500] whitespace-nowrap truncate max-w-[80px]">
+                    {formatUsername(user.username)}
                   </span>
                 </Link>
 
-                {/* Logout Button */}
-                <button 
+                {/* Logout Button - smaller on mobile */}
+                <button
                   onClick={handleLogout}
-                  className="bg-red-500 py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px] hover:bg-red-600 transition-colors"
+                  className="bg-red-500 py-1 px-2 lg:py-1.5 lg:px-3 text-white text-xs lg:text-sm font-[600] h-8 lg:h-10 flex items-center justify-center rounded-full hover:bg-red-600 transition-colors gap-1"
                 >
-                  Logout
+                  <BiLogOut className="text-sm lg:text-base" />
+                  <span className="hidden xs:inline">Logout</span>
                 </button>
               </div>
             ) : (
               // User is not logged in - show login button
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 lg:gap-3">
                 <div className="hidden md:block">
                   <Link to="/login">
-                    <figure className="w-[35px] h-[35px] rounded-full cursor-pointer border-2 border-gray-300">
-                      <img src={userImg} className="w-full rounded-full" alt="User" />
+                    <figure className="w-7 h-7 lg:w-8 lg:h-8 rounded-full cursor-pointer border border-gray-300 flex items-center justify-center">
+                      <BiUser className="text-sm lg:text-base text-gray-500" />
                     </figure>
                   </Link>
                 </div>
                 <Link to="/login">
-                  <button className="bg-primaryColor py-2 px-6 text-white font-[600] h-[44px] flex items-center justify-center rounded-[50px] hover:bg-primaryColor/90 transition-colors">
-                    Login
+                  <button className="bg-primaryColor py-1 px-2 lg:py-1.5 lg:px-3 text-white text-xs lg:text-sm font-[600] h-8 lg:h-10 flex items-center justify-center rounded-full hover:bg-primaryColor/90 transition-colors gap-1">
+                    <BiLogIn className="text-sm lg:text-base" />
+                    <span className="hidden xs:inline">Login</span>
+                    <span className="xs:hidden">Login</span>
                   </button>
                 </Link>
               </div>
             )}
-            
+
             {/* Mobile menu toggle */}
             <span className="md:hidden" onClick={toggleMenu}>
-              <BiMenu className="w-6 h-6 cursor-pointer" />
+              <BiMenu className="w-5 h-5 cursor-pointer" />
             </span>
           </div>
         </div>
@@ -217,4 +251,5 @@ function Header() {
     </header>
   );
 }
+
 export default Header;
