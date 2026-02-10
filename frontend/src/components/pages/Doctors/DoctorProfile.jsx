@@ -1,6 +1,7 @@
 // components/Doctor/DoctorProfile.jsx
+import API from '../../../Api';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
 
 function DoctorProfile() {
   const [doctor, setDoctor] = useState(null);
@@ -31,20 +32,84 @@ function DoctorProfile() {
     fetchDoctorProfile();
   }, []);
 
+  // const fetchDoctorProfile = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const userData = JSON.parse(localStorage.getItem('user'));
+      
+  //     console.log("Fetching doctor profile for user:", userData);
+
+  //     // const response = await axios.get('http://localhost:5000/api/doctors/profile', {
+  //     //   headers: {
+  //     //     Authorization: `Bearer ${token}`
+  //     //   }
+  //     // });
+  //     API.get("/api/doctors/profile");
+      
+  //     setDoctor(response.data);
+  //     setFormData({
+  //       name: response.data.name || '',
+  //       specialty: response.data.specialty || '',
+  //       contact: response.data.contact || '',
+  //       hospital: response.data.hospital || '',
+  //       photo: response.data.photo || '',
+        
+  //       bio: response.data.bio || '',
+  //       experience: response.data.experience || 0,
+  //       ticketPrice: response.data.ticketPrice || 0,
+  //       education: response.data.education || [],
+  //       qualifications: response.data.qualifications || [],
+  //       timeSlots: response.data.timeSlots || []
+  //     });
+      
+  //     // Fetch stats
+  //     fetchDoctorStats();
+      
+  //   } catch (error) {
+  //     console.error('Error fetching doctor profile:', error);
+      
+  //     if (error.response?.status === 404) {
+  //       // Profile doesn't exist - this is NORMAL for new users
+  //       console.log("No doctor profile found - showing setup form");
+  //       setDoctor(null);
+  //       setEditing(true);
+        
+  //       // Pre-fill with user data
+  //       const userData = JSON.parse(localStorage.getItem('user'));
+  //       if (userData) {
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           name: userData.username || 'Dr. ' + userData.username
+  //         }));
+  //       }
+        
+       
+  //       setStats({
+  //         totalAppointments: 0,
+  //         upcomingAppointments: 0,
+  //         totalPatients: 0
+  //       });
+        
+  //     } else {
+      
+  //       setMessage('Error loading profile: ' + (error.response?.data?.message || error.message));
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchDoctorProfile = async () => {
     try {
       const token = localStorage.getItem('token');
       const userData = JSON.parse(localStorage.getItem('user'));
-      
+
       console.log("Fetching doctor profile for user:", userData);
 
-      const response = await axios.get('http://localhost:5000/api/doctors/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const response = await API.get("/api/doctors/profile", {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      
+
       setDoctor(response.data);
       setFormData({
         name: response.data.name || '',
@@ -52,7 +117,6 @@ function DoctorProfile() {
         contact: response.data.contact || '',
         hospital: response.data.hospital || '',
         photo: response.data.photo || '',
-        
         bio: response.data.bio || '',
         experience: response.data.experience || 0,
         ticketPrice: response.data.ticketPrice || 0,
@@ -60,19 +124,16 @@ function DoctorProfile() {
         qualifications: response.data.qualifications || [],
         timeSlots: response.data.timeSlots || []
       });
-      
+
       // Fetch stats
       fetchDoctorStats();
-      
     } catch (error) {
       console.error('Error fetching doctor profile:', error);
-      
       if (error.response?.status === 404) {
-        // Profile doesn't exist - this is NORMAL for new users
         console.log("No doctor profile found - showing setup form");
         setDoctor(null);
         setEditing(true);
-        
+
         // Pre-fill with user data
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
@@ -81,16 +142,13 @@ function DoctorProfile() {
             name: userData.username || 'Dr. ' + userData.username
           }));
         }
-        
-       
+
         setStats({
           totalAppointments: 0,
           upcomingAppointments: 0,
           totalPatients: 0
         });
-        
       } else {
-      
         setMessage('Error loading profile: ' + (error.response?.data?.message || error.message));
       }
     } finally {
@@ -98,39 +156,65 @@ function DoctorProfile() {
     }
   };
 
+  // const fetchDoctorStats = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     // const response = await axios.get('http://localhost:5000/api/doctors/stats', {
+  //     //   headers: {
+  //     //     Authorization: `Bearer ${token}`
+  //     //   }
+  //     // });
+  //     API.get("/api/doctors/stats");
+  //     setStats(response.data);
+  //   } catch (error) {
+  //     console.error('Error fetching doctor stats:', error);
+     
+  //   }
+  // };
   const fetchDoctorStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/doctors/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const response = await API.get("/api/doctors/stats", {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching doctor stats:', error);
-     
     }
   };
-  const getImageUrl = (photoPath) => {
-    console.log('Photo path received in DoctorProfile:', photoPath); 
-    if (!photoPath) {
-      return null;
-    }
+
+  // const getImageUrl = (photoPath) => {
+  // const BASE_URL = import.meta.env.VITE_API_URL;
+
+  //   console.log('Photo path received in DoctorProfile:', photoPath); 
+  //   if (!photoPath) {
+  //     return null;
+  //   }
     
-    // If it's already a full URL, return as is
-    if (photoPath.startsWith('http')) {
-      return photoPath;
-    }
+  //   // If it's already a full URL, return as is
+  //   if (photoPath.startsWith('http')) {
+  //     return photoPath;
+  //   }
     
-    // If it starts with /uploads/, prepend with backend URL
-    if (photoPath.startsWith('/uploads/')) {
-      return `http://localhost:5000${photoPath}`;
-    }
+  //   // If it starts with /uploads/, prepend with backend URL
+  //   if (photoPath.startsWith('/uploads/')) {
+  //     //return `http://localhost:5000${photoPath}`;
+
+  //     return `${BASE_URL}${photoPath}`;
+  //   }
     
-    // If it's just a filename without path, construct the full URL
-    return `http://localhost:5000/uploads/${photoPath}`;
+  //   // If it's just a filename without path, construct the full URL
+  //  // return `http://localhost:5000/uploads/${photoPath}`;
+  //  return `${BASE_URL}${photoPath}`;
+  // };
+   const getImageUrl = (photoPath) => {
+    const BASE_URL = import.meta.env.VITE_API_URL;
+    if (!photoPath) return null;
+    if (photoPath.startsWith('http')) return photoPath;
+    if (photoPath.startsWith('/uploads/')) return `${BASE_URL}${photoPath}`;
+    return `${BASE_URL}${photoPath}`;
   };
+
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -152,38 +236,69 @@ function DoctorProfile() {
     setUploading(true);
     setMessage('');
 
-    try {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const formData = new FormData();
+  //     formData.append('photo', file);
+
+  //     // const response = await axios.post(
+  //     //   'http://localhost:5000/api/doctors/upload-photo',
+  //     //   formData,
+  //     //   {
+  //     //     headers: {
+  //     //       'Authorization': `Bearer ${token}`,
+  //     //       'Content-Type': 'multipart/form-data'
+  //     //     }
+  //     //   }
+  //     // );
+  //     API.post("/api/doctors/upload-photo", formData);
+
+  //     // Update the photo URL in form data
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       photo: response.data.photoUrl
+  //     }));
+
+  //     // If doctor exists, update local state
+  //     if (doctor) {
+  //       setDoctor(prev => ({
+  //         ...prev,
+  //         photo: response.data.photoUrl
+  //       }));
+  //     }
+
+  //     setMessage('✅ Profile photo uploaded successfully!');
+      
+  //   } catch (error) {
+  //     console.error('Error uploading image:', error);
+  //     setMessage('❌ Failed to upload photo: ' + (error.response?.data?.message || error.message));
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
+  try {
       const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('photo', file);
+      const data = new FormData();
+      data.append('photo', file);
 
-      const response = await axios.post(
-        'http://localhost:5000/api/doctors/upload-photo',
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+      const response = await API.post("/api/doctors/upload-photo", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
 
-      // Update the photo URL in form data
       setFormData(prev => ({
         ...prev,
         photo: response.data.photoUrl
       }));
 
-      // If doctor exists, update local state
       if (doctor) {
-        setDoctor(prev => ({
-          ...prev,
-          photo: response.data.photoUrl
-        }));
+        setDoctor(prev => ({ ...prev, photo: response.data.photoUrl }));
       }
 
       setMessage('✅ Profile photo uploaded successfully!');
-      
     } catch (error) {
       console.error('Error uploading image:', error);
       setMessage('❌ Failed to upload photo: ' + (error.response?.data?.message || error.message));
@@ -192,62 +307,78 @@ function DoctorProfile() {
     }
   };
 
-const handleRemovePhoto = async () => {
-  try {
-    const token = localStorage.getItem('token');
+// const handleRemovePhoto = async () => {
+//   try {
+//     const token = localStorage.getItem('token');
     
-    console.log('Attempting to remove photo...');
+//     console.log('Attempting to remove photo...');
     
-    const response = await axios.delete('http://localhost:5000/api/doctors/photo', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+//     // const response = await axios.delete('http://localhost:5000/api/doctors/photo', {
+//     //   headers: {
+//     //     Authorization: `Bearer ${token}`
+//     //   }
+//     // });
+//     API.delete("/api/doctors/photo");
 
-    console.log('Remove photo response:', response.data);
+//     console.log('Remove photo response:', response.data);
     
-    // Check for success in response
-    if (response.data.success || response.data.message) {
-      // Update local state
-      setFormData(prev => ({
-        ...prev,
-        photo: ''
-      }));
+//     // Check for success in response
+//     if (response.data.success || response.data.message) {
+//       // Update local state
+//       setFormData(prev => ({
+//         ...prev,
+//         photo: ''
+//       }));
 
-      if (doctor) {
-        setDoctor(prev => ({
-          ...prev,
-          photo: ''
-        }));
-      }
+//       if (doctor) {
+//         setDoctor(prev => ({
+//           ...prev,
+//           photo: ''
+//         }));
+//       }
 
-      // Show success message
-      setMessage('✅ Profile photo removed successfully!');
+//       // Show success message
+//       setMessage('✅ Profile photo removed successfully!');
       
-      // Optional: Show a toast if you're using a toast library
-      // toast.success('Photo removed successfully');
-    } else {
-      throw new Error('Failed to remove photo');
+//       // Optional: Show a toast if you're using a toast library
+//       // toast.success('Photo removed successfully');
+//     } else {
+//       throw new Error('Failed to remove photo');
+//     }
+    
+//   } catch (error) {
+//     console.error('Error removing photo:', error);
+    
+//     // Get detailed error message
+//     const errorMessage = error.response?.data?.message || 
+//                          error.response?.data?.error || 
+//                          error.message || 
+//                          'Failed to remove photo';
+    
+//     console.error('Error details:', error.response?.data);
+    
+//     // Show error message
+//     setMessage('❌ ' + errorMessage);
+    
+//     // Optional: Show toast error
+//     // toast.error(errorMessage);
+//   }
+// };
+ const handleRemovePhoto = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await API.delete("/api/doctors/photo", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setFormData(prev => ({ ...prev, photo: '' }));
+      if (doctor) setDoctor(prev => ({ ...prev, photo: '' }));
+      setMessage('✅ Profile photo removed successfully!');
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      setMessage('❌ ' + (error.response?.data?.message || error.message));
     }
-    
-  } catch (error) {
-    console.error('Error removing photo:', error);
-    
-    // Get detailed error message
-    const errorMessage = error.response?.data?.message || 
-                         error.response?.data?.error || 
-                         error.message || 
-                         'Failed to remove photo';
-    
-    console.error('Error details:', error.response?.data);
-    
-    // Show error message
-    setMessage('❌ ' + errorMessage);
-    
-    // Optional: Show toast error
-    // toast.error(errorMessage);
-  }
-};
+  };
   // Handle basic input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -347,40 +478,68 @@ const handleRemovePhoto = async () => {
     setLoading(true);
     setMessage('');
     
-    try {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     let response;
+
+  //     if (!doctor) {
+  //       // Create new profile
+  //       console.log("Creating new doctor profile...");
+  //       // response = await axios.post('http://localhost:5000/api/doctors/profile', formData, {
+  //       //   headers: {
+  //       //     Authorization: `Bearer ${token}`,
+  //       //     'Content-Type': 'application/json'
+  //       //   }
+  //       // });
+  //       API.post("/api/doctors/profile", formData);
+  //       setMessage('✅ Profile created successfully!');
+  //     } else {
+  //       // Update existing profile
+  //       console.log("Updating existing doctor profile...");
+  //       // response = await axios.put('http://localhost:5000/api/doctors/profile', formData, {
+  //       //   headers: {
+  //       //     Authorization: `Bearer ${token}`,
+  //       //     'Content-Type': 'application/json'
+  //       //   }
+  //       // });
+  //       API.put("/api/doctors/profile", formData);
+  //       setMessage('✅ Profile updated successfully!');
+  //     }
+      
+  //     setDoctor(response.data.doctor || response.data);
+  //     setEditing(false);
+      
+  //     // Refresh the data after a short delay
+  //     setTimeout(() => {
+  //       fetchDoctorProfile();
+  //     }, 1500);
+      
+  //   } catch (error) {
+  //     console.error('Error saving profile:', error);
+  //     setMessage('❌ Failed to save profile: ' + (error.response?.data?.message || error.message));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  try {
       const token = localStorage.getItem('token');
       let response;
 
       if (!doctor) {
-        // Create new profile
-        console.log("Creating new doctor profile...");
-        response = await axios.post('http://localhost:5000/api/doctors/profile', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        response = await API.post("/api/doctors/profile", formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         setMessage('✅ Profile created successfully!');
       } else {
-        // Update existing profile
-        console.log("Updating existing doctor profile...");
-        response = await axios.put('http://localhost:5000/api/doctors/profile', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        response = await API.put("/api/doctors/profile", formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         setMessage('✅ Profile updated successfully!');
       }
-      
+
       setDoctor(response.data.doctor || response.data);
       setEditing(false);
-      
-      // Refresh the data after a short delay
-      setTimeout(() => {
-        fetchDoctorProfile();
-      }, 1500);
-      
+      setTimeout(() => fetchDoctorProfile(), 1500);
     } catch (error) {
       console.error('Error saving profile:', error);
       setMessage('❌ Failed to save profile: ' + (error.response?.data?.message || error.message));

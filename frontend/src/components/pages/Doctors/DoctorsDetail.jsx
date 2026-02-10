@@ -5,7 +5,8 @@ import doctorImg from '../../../assets/images/doctor-img02.png'
 import DoctorsAbout from './DoctorsAbout'
 import DoctorFeedback from './DoctorFeedback'
 import SidePanel from './SidePanel'
-import axios from 'axios'
+//import axios from 'axios'
+import API from '../../../Api'
 
 function DoctorsDetail() {
   const [tab, setTab] = useState('about')
@@ -16,47 +17,80 @@ function DoctorsDetail() {
 
 
    // Add the getImageUrl function here
+  // const getImageUrl = (photoPath) => {
+  //   const BASE_URL = import.meta.env.VITE_API_URL;
+  //   console.log('Photo path received in DoctorsDetail:', photoPath); 
+  //   if (!photoPath) {
+  //     return doctorImg; // Fallback to default image
+  //   }
+    
+  //   // If it's already a full URL, return as is
+  //   if (photoPath.startsWith('http')) {
+  //     return photoPath;
+  //   }
+    
+  //   // If it starts with /uploads/, prepend with backend URL
+  //   if (photoPath.startsWith('/uploads/')) {
+  //     //return `http://localhost:5000${photoPath}`;
+  //     return `${BASE_URL}${photoPath}`;
+  //   }
+    
+  //   // If it's just a filename without path, construct the full URL
+  //  // return `http://localhost:5000/uploads/${photoPath}`;
+  //  return `${BASE_URL}${photoPath}`;
+  // };
+
   const getImageUrl = (photoPath) => {
-    console.log('Photo path received in DoctorsDetail:', photoPath); 
-    if (!photoPath) {
-      return doctorImg; // Fallback to default image
-    }
-    
-    // If it's already a full URL, return as is
-    if (photoPath.startsWith('http')) {
-      return photoPath;
-    }
-    
-    // If it starts with /uploads/, prepend with backend URL
-    if (photoPath.startsWith('/uploads/')) {
-      return `http://localhost:5000${photoPath}`;
-    }
-    
-    // If it's just a filename without path, construct the full URL
-    return `http://localhost:5000/uploads/${photoPath}`;
+    const BASE_URL = import.meta.env.VITE_API_URL;
+    if (!photoPath) return doctorImg;
+    if (photoPath.startsWith('http')) return photoPath;
+    if (photoPath.startsWith('/uploads/')) return `${BASE_URL}${photoPath}`;
+    return `${BASE_URL}${photoPath}`;
   };
 
   useEffect(() => {
     const fetchDoctor = async () => {
-      try {
+  //     try {
+  //       setLoading(true)
+  //       setError(null)
+  //       console.log("Fetching doctor details for ID:", id)
+        
+  //       API.get(`/api/doctors/${id}`);
+  //       console.log("Doctor details response:", res.data)
+  //       setDoctor(res.data)
+  //     } catch (error) {
+  //       console.error("Error fetching doctor:", error)
+  //       setError("Failed to load doctor details. Please try again.")
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
+
+  //   if (id) {
+  //     fetchDoctor()
+  //   }
+  // }, [id])
+   try {
         setLoading(true)
         setError(null)
         console.log("Fetching doctor details for ID:", id)
-        
-        const res = await axios.get(`http://localhost:5000/api/doctors/${id}`)
+
+        const token = localStorage.getItem('token')
+        const res = await API.get(`/api/doctors/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
         console.log("Doctor details response:", res.data)
         setDoctor(res.data)
-      } catch (error) {
-        console.error("Error fetching doctor:", error)
+      } catch (err) {
+        console.error("Error fetching doctor:", err)
         setError("Failed to load doctor details. Please try again.")
       } finally {
         setLoading(false)
       }
     }
 
-    if (id) {
-      fetchDoctor()
-    }
+    if (id) fetchDoctor()
   }, [id])
 
   if (loading) {

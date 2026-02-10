@@ -1,6 +1,7 @@
 // components/Admin/AdminProfile.jsx
+import API from '../../../Api';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
 
 function AdminProfile() {
   const [admin, setAdmin] = useState(null);
@@ -26,44 +27,78 @@ function AdminProfile() {
     fetchAdminStats();
   }, []);
 
-  const fetchAdminProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/admin/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+//   const fetchAdminProfile = async () => {
+//     try {
+//       const token = localStorage.getItem('token');
+//       // const response = await axios.get('http://localhost:5000/api/admin/profile', {
+//       //   headers: {
+//       //     Authorization: `Bearer ${token}`
+//       //   }
+//       // });
       
+// API.get("/api/admin/profile");
+      
+//       setAdmin(response.data);
+//       setFormData({
+//         name: response.data.name || response.data.username || '',
+//         email: response.data.email || '',
+//         contact: response.data.contact || '',
+//         department: response.data.department || '',
+//         photo: response.data.photo || ''
+//       });
+//     } catch (error) {
+//       console.error('Error fetching admin profile:', error);
+//       alert('Failed to load profile');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+ const fetchAdminProfile = async () => {
+    try {
+      const response = await API.get("/admin/profile");
+
       setAdmin(response.data);
+
       setFormData({
-        name: response.data.name || response.data.username || '',
-        email: response.data.email || '',
-        contact: response.data.contact || '',
-        department: response.data.department || '',
-        photo: response.data.photo || ''
+        name: response.data.name || response.data.username || "",
+        email: response.data.email || "",
+        contact: response.data.contact || "",
+        department: response.data.department || "",
+        photo: response.data.photo || "",
       });
     } catch (error) {
-      console.error('Error fetching admin profile:', error);
-      alert('Failed to load profile');
+      console.error("Error fetching admin profile:", error);
+      alert("Failed to load profile");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAdminStats = async () => {
+//   const fetchAdminStats = async () => {
+//     try {
+//       const token = localStorage.getItem('token');
+//       // const response = await axios.get('http://localhost:5000/api/admin/stats', {
+//       //   headers: {
+//       //     Authorization: `Bearer ${token}`
+//       //   }
+//       // });
+      
+// API.get("/api/admin/stats");
+//       setStats(response.data);
+//     } catch (error) {
+//       console.error('Error fetching admin stats:', error);
+//     }
+//   };
+const fetchAdminStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/admin/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await API.get("/admin/stats");
       setStats(response.data);
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
+      console.error("Error fetching admin stats:", error);
     }
   };
+
 
   const handleInputChange = (e) => {
     setFormData({
@@ -74,21 +109,34 @@ function AdminProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put('http://localhost:5000/api/admin/profile', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     // const response = await axios.put('http://localhost:5000/api/admin/profile', formData, {
+  //     //   headers: {
+  //     //     Authorization: `Bearer ${token}`,
+  //     //     'Content-Type': 'application/json'
+  //     //   }
+  //     // });
+  //     API.put("/api/admin/profile", formData);
       
-      setAdmin(response.data.admin);
+  //     setAdmin(response.data.admin);
+  //     setEditing(false);
+  //     alert('Profile updated successfully!');
+  //   } catch (error) {
+  //     console.error('Error updating profile:', error);
+  //     alert('Failed to update profile');
+  //   }
+  // };
+  
+    try {
+      const response = await API.put("/admin/profile", formData);
+
+      setAdmin(response.data.admin || response.data);
       setEditing(false);
-      alert('Profile updated successfully!');
+      alert("Profile updated successfully!");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile");
     }
   };
 

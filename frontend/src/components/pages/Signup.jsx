@@ -2,6 +2,7 @@ import signupImg from '../../assets/images/signup.svg'
 import avatar from '../../assets/images/avatar-icon.png'
 import {Link} from 'react-router-dom'
 import { useState } from 'react'
+import API from '../../Api'
 
 function Signup() {
   const [selectedFile,setSelectedFile]=useState(null)
@@ -26,26 +27,55 @@ function Signup() {
   const submitHandler=async (event)=>{
     event.preventDefault()
     
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+//   try {
+//     const res = await fetch("http://localhost:5000/api/auth/register", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(formData),
+//     });
 
-    const data = await res.json();
+//     const data = await res.json();
 
-    if (res.ok) {
-      alert("Signup successful!");
-      console.log(data);
-    } else {
-      alert(data.message || "Signup failed");
+//     if (res.ok) {
+//       alert("Signup successful!");
+//       console.log(data);
+//     } else {
+//       alert(data.message || "Signup failed");
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     alert("Server error");
+//   }
+// };
+
+try {
+      const payload = new FormData();
+      payload.append('username', formData.username);
+      payload.append('email', formData.email);
+      payload.append('password', formData.password);
+      payload.append('role', formData.role);
+      payload.append('gender', formData.gender);
+      if (formData.photo) {
+        payload.append('photo', formData.photo); // for future file upload
+      }
+
+      const res = await API.post('/api/auth/register', payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // required for file uploads
+        },
+      });
+
+      alert('Signup successful!');
+      console.log(res.data);
+      navigate('/login'); // redirect to login after signup
+    } catch (err) {
+      console.error('Signup error:', err);
+      alert(err.response?.data?.message || 'Signup failed or server error');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    alert("Server error");
-  }
-};
+  };
+
 
   return (
     <section className="px-5 xl:px-0">

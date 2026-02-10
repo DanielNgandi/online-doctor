@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {Link, useNavigate} from 'react-router-dom'
 import { useAuth } from '../context/AuthContext';
+import API from "../../Api";
 function Login() {
   const { login } = useAuth();
   const [formData,setFormData]=useState({
@@ -17,16 +18,21 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      // const res = await fetch("http://localhost:5000/api/auth/login", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(formData),
+      // });
 
-      const data = await res.json();
+      // const data = await res.json();
 
-      if (res.ok) {
-        login(data.user, data.token);
+      // if (res.ok) {
+      //   login(data.user, data.token);
+      const res = await API.post("/api/auth/login", formData); // use API helper
+      const data = res.data;
+
+      // Save login state
+      login(data.user, data.token);
         
 
         alert("Login successful!");
@@ -39,9 +45,9 @@ function Login() {
         } else {
           navigate("/home"); // patient or default home
         }
-      } else {
-        alert(data.message || "Login failed");
-      }
+      // } else {
+      //   alert(data.message || "Login failed");
+      // }
     } catch (err) {
       console.error(err);
       alert("Server error");
@@ -99,93 +105,9 @@ function Login() {
   );
   
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // return (
-  //   <section className="px-5 lg:px-0">
-  //     <div className="w-full max-w-[570px] mx-auto rounded-lg shadow-md md:p-10">
-  //       <h3 className="text-headingColor text-[22px] leading-9 font-bold mb-10">Hello! <span className='text-primaryColor'>welcome</span> back</h3>
-  //       <form action="" className="py-4 md:py-0">
-  //         <div className="mb-5">
-  //           <input type='email' placeholder='enter your email' name='email'  value={formData.email} onChange={handleInputChange} className="w-full px-4 py-3 border-b border-solid border-[#0066ff61] focus:outline-none focus:border-b-primaryColor text-[22px] leading-7 text-headingColor placeholder:text-textColor rounded-md cursor-pointer" required/>
-  //         </div>
-  //         <div className="mb-5">
-  //           <input type='password' placeholder='enter your password' name='password'  value={formData.password} onChange={handleInputChange} className="w-full px-4 py-3 border-b border-solid border-[#0066ff61] focus:outline-none focus:border-b-primaryColor text-[22px] leading-7 text-headingColor placeholder:text-textColor rounded-md cursor-pointer" required/>
-  //         </div>
-  //         <div className="mt-7">
-  //           <button type='submit' className="w-[10rem] bg-primaryColor text-white text-[18px] leading-[30px] rounded-lg px-4 py-4">Login</button>
-  //         </div>
-
-  //         <p className="mt-5 text-textColor text-center">Dont have an account? <Link to='/register' className="text-primaryColor font-medium ml-1">Register</Link></p>
-  //       </form>
-  //     </div>
-
-  //   </section>
-  // )
+ 
 }
 
 export default Login
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const Login = () => {
-//   return (
-//     <div className="max-w-[500px] mt-[30px] mx-auto bg-[#1943832c] rounded-md flex items-center flex-col p-5 ml-96 ">
-//       <div className="container flex flex-col p-4 items-center">
-//         <label htmlFor="username" className="p-4 text-[18px] gap-4 flex">
-//           Username
-//           <input type="text" id="username" placeholder="Enter username" className="p-2 border rounded-md" />
-//         </label>
-//         <label htmlFor="password" className="p-4 text-[18px] gap-4 flex">
-//           Password
-//           <input type="password" id="password" placeholder="Enter password" className="p-2 border rounded-md" />
-//         </label>
-//         <button className="mt-4 p-2 bg-blue-500 text-white rounded-md">Login</button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;

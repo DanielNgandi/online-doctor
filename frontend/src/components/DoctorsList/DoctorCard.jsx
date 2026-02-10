@@ -35,18 +35,25 @@ function DoctorCard({ doctor }) {
     }
     
     
-    if (photoPath.startsWith('http')) {
-      return photoPath;
-    }
+  //   if (photoPath.startsWith('http')) {
+  //     return photoPath;
+  //   }
     
     
-    if (photoPath.startsWith('/uploads/')) {
-      return `http://localhost:5000${photoPath}`;
-    }
+  //   if (photoPath.startsWith('/uploads/')) {
+  //     return `http://localhost:5000${photoPath}`;
+  //   }
     
     
-    return `http://localhost:5000/uploads/${photoPath}`;
+  //   return `http://localhost:5000/uploads/${photoPath}`;
+  // };
+  if (photoPath.startsWith("http")) return photoPath;
+    if (photoPath.startsWith("/uploads/")) return `${import.meta.env.VITE_API_URL}${photoPath}`;
+    
+    // default uploads path
+    return `${import.meta.env.VITE_API_URL}/uploads/${photoPath}`;
   };
+
 
 const imageUrl = getImageUrl(photo);
 

@@ -1,5 +1,6 @@
+import API from "../../../Api";
 import { useState } from "react";
-import axios from "axios";
+//import axios from "axios";
 
 function AdminAddDoctor() {
   const [formData, setFormData] = useState({
@@ -124,22 +125,24 @@ function AdminAddDoctor() {
     
     try {
     
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
+      // const token = localStorage.getItem("token");
+      // const user = JSON.parse(localStorage.getItem("user"));
 
-      console.log("Submitting doctor data:", formData);
+      //console.log("Submitting doctor data:", formData);
+
+      const res = await API.post("/api/admin/doctors", formData);
 
       
       setMessage("✅ Doctor data ready! (Backend integration needed)");
       console.log("Full doctor data to send:", formData);
 
       
-      
-      const res = await axios.post("http://localhost:5000/api/admin/doctors", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+
+      // const res = await axios.post("http://localhost:5000/api/admin/doctors", formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`
+      //   }
+      // });
 
       setMessage("✅ Doctor added successfully!");
       console.log(res.data);

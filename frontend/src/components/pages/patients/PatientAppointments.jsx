@@ -7,14 +7,151 @@ function PatientAppointments() {
   const [error, setError] = useState("");
   const [hasPatientProfile, setHasPatientProfile] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(true);
-  const [filter, setFilter] = useState("all"); // all, upcoming, past
+  const [filter, setFilter] = useState("all");
 
-    useEffect(() => {
+  //   useEffect(() => {
+  // //   const checkProfileAndFetchAppointments = async () => {
+  // //     const token = localStorage.getItem("token");
+  // //     const user = JSON.parse(localStorage.getItem("user"));
+
+  // //     if (!user || !user.id) {
+  // //       setError("Please log in to view appointments");
+  // //       setCheckingProfile(false);
+  // //       setLoading(false);
+  // //       return;
+  // //     }
+
+  // //     try {
+  // //       // First check if patient profile exists
+  // //       const profileRes = await axios.get(
+  // //         "http://localhost:5000/api/patient/profile",
+  // //         {
+  // //           headers: {
+  // //             Authorization: `Bearer ${token}`,
+  // //           },
+  // //         }
+  // //       );
+
+  // //       if (profileRes.data && profileRes.data.id) {
+  // //         setHasPatientProfile(true);
+  // //         // If profile exists, fetch appointments
+  // //         fetchAppointments(token);
+  // //       }
+  // //     } catch (err) {
+  // //       if (err.response?.status === 404) {
+  // //         setHasPatientProfile(false);
+  // //         setError("profile-not-found");
+  // //       } else {
+  // //         console.error("Error checking profile:", err);
+  // //         setError("Failed to check profile. Please try again.");
+  // //       }
+  // //     } finally {
+  // //       setCheckingProfile(false);
+  // //       setLoading(false);
+  // //     }
+  // //   };
+
+  // //   checkProfileAndFetchAppointments();
+  // // }, []);
+
+
+  // // Fetch appointments when filter changes (only if profile exists)
+  // useEffect(() => {
+  //   if (hasPatientProfile) {
+  //     const token = localStorage.getItem("token");
+  //     fetchAppointments(token);
+  //   }
+  // }, [filter, hasPatientProfile]);
+  // useEffect(() => {
+  //   fetchAppointments();
+  // }, [filter]);
+
+  // const fetchAppointments = async () => {
+  //   try {
+  //     setLoading(true);
+  //     //const token = localStorage.getItem("token");
+      
+  //     let url = "http://localhost:5000/api/appointments/patient/my-appointments";
+  //     const params = new URLSearchParams();
+      
+  //     if (filter !== "all") {
+  //       params.append("filter", filter);
+  //     }
+      
+  //     if (params.toString()) {
+  //       url += `?${params.toString()}`;
+  //     }
+
+  //     const response = await axios.get(url, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+      
+  //     setAppointments(response.data);
+  //     setError("");
+  //   } catch (err) {
+  //     console.error("Error fetching appointments:", err);
+  //     setError("Failed to load appointments");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const formatDate = (dateString) => {
+  //   return new Date(dateString).toLocaleString();
+  // };
+
+  // const getStatus = (appointmentDate) => {
+  //   const now = new Date();
+  //   const appointment = new Date(appointmentDate);
+  //   return appointment > now ? "Upcoming" : "Completed";
+  // };
+
+  // const getStatusColor = (status) => {
+  //   return status === "Upcoming" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800";
+  // };
+  // Utility functions
+  const formatDate = (dateString) => new Date(dateString).toLocaleString();
+
+  const getStatus = (appointmentDate) => {
+    const now = new Date();
+    const appointment = new Date(appointmentDate);
+    return appointment > now ? "Upcoming" : "Completed";
+  };
+
+  const getStatusColor = (status) => {
+    return status === "Upcoming"
+      ? "bg-blue-100 text-blue-800"
+      : "bg-green-100 text-green-800";
+  };
+
+  // Fetch appointments
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      let url = "/api/appointments/patient/my-appointments";
+      const params = new URLSearchParams();
+      if (filter !== "all") params.append("filter", filter);
+      if (params.toString()) url += `?${params.toString()}`;
+
+      const response = await API.get(url);
+      setAppointments(response.data || []);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+      setError("Failed to load appointments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check patient profile and fetch appointments
+  useEffect(() => {
     const checkProfileAndFetchAppointments = async () => {
-      const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
-
-      if (!user || !user.id) {
+      if (!user?.id) {
         setError("Please log in to view appointments");
         setCheckingProfile(false);
         setLoading(false);
@@ -22,20 +159,11 @@ function PatientAppointments() {
       }
 
       try {
-        // First check if patient profile exists
-        const profileRes = await axios.get(
-          "http://localhost:5000/api/patient/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const profileRes = await API.get("/api/patient/profile");
 
-        if (profileRes.data && profileRes.data.id) {
+        if (profileRes.data?.id) {
           setHasPatientProfile(true);
-          // If profile exists, fetch appointments
-          fetchAppointments(token);
+          await fetchAppointments();
         }
       } catch (err) {
         if (err.response?.status === 404) {
@@ -52,64 +180,8 @@ function PatientAppointments() {
     };
 
     checkProfileAndFetchAppointments();
-  }, []);
+  }, [filter]); // re-check appointments when filter changes
 
-  // Fetch appointments when filter changes (only if profile exists)
-  useEffect(() => {
-    if (hasPatientProfile) {
-      const token = localStorage.getItem("token");
-      fetchAppointments(token);
-    }
-  }, [filter, hasPatientProfile]);
-  useEffect(() => {
-    fetchAppointments();
-  }, [filter]);
-
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      //const token = localStorage.getItem("token");
-      
-      let url = "http://localhost:5000/api/appointments/patient/my-appointments";
-      const params = new URLSearchParams();
-      
-      if (filter !== "all") {
-        params.append("filter", filter);
-      }
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      setAppointments(response.data);
-      setError("");
-    } catch (err) {
-      console.error("Error fetching appointments:", err);
-      setError("Failed to load appointments");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getStatus = (appointmentDate) => {
-    const now = new Date();
-    const appointment = new Date(appointmentDate);
-    return appointment > now ? "Upcoming" : "Completed";
-  };
-
-  const getStatusColor = (status) => {
-    return status === "Upcoming" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800";
-  };
    if (checkingProfile) {
     return (
       <div className="text-center p-4">

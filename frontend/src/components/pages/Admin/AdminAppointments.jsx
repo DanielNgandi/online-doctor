@@ -1,6 +1,8 @@
 // src/components/AdminAppointments.js
+import API from '../../../Api';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+
 
 const AdminAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -15,56 +17,94 @@ const AdminAppointments = () => {
     fetchStats();
   }, [filter, selectedDate]);
 
-  const fetchAppointments = async () => {
+  // const fetchAppointments = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const token = localStorage.getItem('token');
+      
+  //     // let url = 'http://localhost:5000/api/admin/appointments';
+  //    let url = "/api/admin/appointments";
+  //     const params = new URLSearchParams();
+      
+  //     if (filter !== 'all') {
+  //       params.append('filter', filter);
+  //     }
+  //     if (selectedDate) {
+  //       params.append('date', selectedDate);
+  //     }
+      
+  //     if (params.toString()) {
+  //       url += `?${params.toString()}`;
+  //     }
+  //      console.log("Calling ADMIN endpoint:", url);
+
+  //     // const response = await axios.get(url, {
+  //     //   headers: { Authorization: `Bearer ${token}` }
+  //     // });
+  //     const response = await API.get(url);
+      
+  //     if (response.data.success) {
+  //       setAppointments(response.data.appointments);
+  //     } else {
+  //       setError('Failed to load appointments');
+  //     }
+  //     setError("");
+  //   } catch (error) {
+  //     console.error('Error fetching appointments:', error);
+  //     setError('Failed to load appointments');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+    const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      let url = 'http://localhost:5000/api/admin/appointments';
-      const params = new URLSearchParams();
-      
-      if (filter !== 'all') {
-        params.append('filter', filter);
-      }
-      if (selectedDate) {
-        params.append('date', selectedDate);
-      }
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-       console.log("Calling ADMIN endpoint:", url);
+      setError("");
 
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
+      const params = {};
+      if (filter !== "all") params.filter = filter;
+      if (selectedDate) params.date = selectedDate;
+
+      console.log("📡 Fetching appointments with params:", params);
+
+      const response = await API.get("/admin/appointments", { params });
+
+      if (response.data?.success) {
         setAppointments(response.data.appointments);
       } else {
-        setError('Failed to load appointments');
+        setError("Failed to load appointments");
       }
-      setError("");
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      setError('Failed to load appointments');
+    } catch (err) {
+      console.error("❌ Error fetching appointments:", err);
+      setError("Failed to load appointments");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
+  // const fetchStats = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     // const response = await axios.get('http://localhost:5000/api/admin/appointments/stats', {
+  //     //   headers: { Authorization: `Bearer ${token}` }
+  //     // });
+  //     await API.get("/api/admin/appointments/stats");
+
+  //     if (response.data.success) {
+  //       setStats(response.data.stats);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching stats:', error);
+  //   }
+  // };
+   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/admin/appointments/stats', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
+      const response = await API.get("/admin/appointments/stats");
+      if (response.data?.success) {
         setStats(response.data.stats);
       }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+    } catch (err) {
+      console.error("❌ Error fetching stats:", err);
     }
   };
 

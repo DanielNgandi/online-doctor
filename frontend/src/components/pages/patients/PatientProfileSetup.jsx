@@ -27,14 +27,16 @@ function PatientProfileSetup() {
       }
 
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/patient/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        // const response = await axios.get(
+        //   "http://localhost:5000/api/patient/profile",
+        //   {
+        //     headers: {
+        //       Authorization: `Bearer ${token}`,
+        //     },
+        //   }
+        // );
+        
+        const response = await API.get("/api/patient/profile");
         
         if (response.data) {
           setProfile({
@@ -72,48 +74,76 @@ function PatientProfileSetup() {
     setLoading(true);
     setMessage("");
 
-    try {
-      // Check if profile exists first
-      try {
-        await axios.get("http://localhost:5000/api/patient/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  //   try {
+  //     // Check if profile exists first
+  //     try {
+  //       await axios.get("http://localhost:5000/api/patient/profile", {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
         
-        // Profile exists, update it
-        const response = await axios.put(
-          "http://localhost:5000/api/patient/profile",
-          profile,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  //       // Profile exists, update it
+  //       const response = await axios.put(
+  //         "http://localhost:5000/api/patient/profile",
+  //         profile,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+  //       setMessage("Profile updated successfully!");
+  //       setIsEditing(false);
+  //     } catch (error) {
+  //       if (error.response?.status === 404) {
+  //         // Profile doesn't exist, create it
+  //         const response = await axios.post(
+  //           "http://localhost:5000/api/patient/profile",
+  //           profile,
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
+  //         setMessage("Profile created successfully!");
+  //         setIsEditing(false);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Error saving profile:", err);
+  //     setMessage(`Error: ${err.response?.data?.message || "Failed to save profile"}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  try {
+      // Try to get profile first
+      try {
+        await API.get("/api/patient/profile");
+        // If exists, update
+        await API.put("/api/patient/profile", profile);
         setMessage("Profile updated successfully!");
         setIsEditing(false);
       } catch (error) {
         if (error.response?.status === 404) {
-          // Profile doesn't exist, create it
-          const response = await axios.post(
-            "http://localhost:5000/api/patient/profile",
-            profile,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          // If profile doesn't exist, create it
+          await API.post("/api/patient/profile", profile);
           setMessage("Profile created successfully!");
           setIsEditing(false);
+        } else {
+          throw error;
         }
       }
     } catch (err) {
       console.error("Error saving profile:", err);
-      setMessage(`Error: ${err.response?.data?.message || "Failed to save profile"}`);
+      setMessage(
+        `Error: ${err.response?.data?.message || "Failed to save profile"}`
+      );
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleEdit = () => {
     setIsEditing(true);

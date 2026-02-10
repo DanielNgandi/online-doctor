@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-//import PatientProfileSetup from "../patients/PatientProfileSetup"
+//import axios from "axios";
+import API from "../../../Api";
 
 function BookAppointment() {
   const [doctors, setDoctors] = useState([]);
@@ -13,30 +13,55 @@ function BookAppointment() {
   const [checkingProfile, setCheckingProfile] = useState(true);
     
   useEffect(() => {
-    const checkPatientProfile = async () => {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
+  //   const checkPatientProfile = async () => {
+  //     //const token = localStorage.getItem("token");
+  //     //const user = JSON.parse(localStorage.getItem("user"));
 
-      if (!user || !user.id) {
-        alert("Please log in to book an appointment");
-        setCheckingProfile(false);
-        return;
-      }
+  //     if (!user || !user.id) {
+  //       alert("Please log in to book an appointment");
+  //       setCheckingProfile(false);
+  //       return;
+  //     }
 
-      try {
-        const patientRes = await axios.get(
-          "http://localhost:5000/api/patient/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  //     try {
+  //       // const patientRes = await axios.get(
+  //       //   "http://localhost:5000/api/patient/profile",
+  //       //   {
+  //       //     headers: {
+  //       //       Authorization: `Bearer ${token}`,
+  //       //     },
+  //       //   }
+  //       // );
+  //       API.get("/api/patient/profile");
         
-        if (patientRes.data && patientRes.data.id) {
-          setPatientId(patientRes.data.id);
+  //       if (patientRes.data && patientRes.data.id) {
+  //         setPatientId(patientRes.data.id);
+  //         setHasPatientProfile(true);
+  //         console.log("Patient ID found:", patientRes.data.id);
+  //       }
+  //     } catch (err) {
+  //       if (err.response?.status === 404) {
+  //         setHasPatientProfile(false);
+  //         setPatientId("");
+  //       } else {
+  //         console.error("Error checking patient profile:", err);
+  //         setHasPatientProfile(false);
+  //       }
+  //     } finally {
+  //       setCheckingProfile(false);
+  //     }
+  //   };
+
+  //   checkPatientProfile();
+  // }, []);
+      const checkPatientProfile = async () => {
+      try {
+        const response = await API.get("/patient/profile");
+
+        if (response.data && response.data.id) {
+          setPatientId(response.data.id);
           setHasPatientProfile(true);
-          console.log("Patient ID found:", patientRes.data.id);
+          console.log("Patient ID found:", response.data.id);
         }
       } catch (err) {
         if (err.response?.status === 404) {
@@ -54,19 +79,35 @@ function BookAppointment() {
     checkPatientProfile();
   }, []);
 
+
   // Fetch doctors only if patient profile exists
+  // useEffect(() => {
+  //    if (hasPatientProfile) {
+  //     // const token = localStorage.getItem("token");
+  //     // axios
+  //     //   .get("http://localhost:5000/api/doctors", {
+  //     //     headers: {
+  //     //       Authorization: `Bearer ${token}`,
+  //     //     },
+  //     //   })
+  //     API.get("/api/doctors");
+  //       .then((res) => setDoctors(res.data))
+  //       .catch((err) => console.error("Error fetching doctors:", err));
+  //   }
+  // }, [hasPatientProfile]);
   useEffect(() => {
-     if (hasPatientProfile) {
-      const token = localStorage.getItem("token");
-      axios
-        .get("http://localhost:5000/api/doctors", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => setDoctors(res.data))
-        .catch((err) => console.error("Error fetching doctors:", err));
-    }
+    if (!hasPatientProfile) return;
+
+    const fetchDoctors = async () => {
+      try {
+        const res = await API.get("/doctors");
+        setDoctors(res.data);
+      } catch (err) {
+        console.error("Error fetching doctors:", err);
+      }
+    };
+
+    fetchDoctors();
   }, [hasPatientProfile]);
 
   const handleSubmit = async (e) => {
@@ -77,24 +118,46 @@ function BookAppointment() {
       return;
     }
 
-    const token = localStorage.getItem("token");
+    //const token = localStorage.getItem("token");
     setLoading(true);
 
-    try {
-      await axios.post(
-        "http://localhost:5000/api/appointments",
-        {
-          doctorId: parseInt(doctorId),
-          patientId: parseInt(patientId),
-          date: new Date(date).toISOString(),
-          reason,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //   try {
+  //     // await axios.post(
+  //     //   "http://localhost:5000/api/appointments",
+  //     //   {
+  //     //     doctorId: parseInt(doctorId),
+  //     //     patientId: parseInt(patientId),
+  //     //     date: new Date(date).toISOString(),
+  //     //     reason,
+  //     //   },
+  //     //   {
+  //     //     headers: {
+  //     //       Authorization: `Bearer ${token}`,
+  //     //     },
+  //     //   }
+  //     // );
+  //     API.post("/api/appointments", data);
+
+  //     alert("Appointment booked successfully!");
+  //     setDoctorId("");
+  //     setDate("");
+  //     setReason("");
+  //   } catch (err) {
+  //     console.error("Full error details:", err.response?.data || err.message);
+  //     alert(`Error booking appointment: ${err.response?.data?.message || err.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+   try {
+      const data = {
+        doctorId: Number(doctorId),
+        patientId: Number(patientId),
+        date: new Date(date).toISOString(),
+        reason,
+      };
+
+      await API.post("/appointments", data);
 
       alert("Appointment booked successfully!");
       setDoctorId("");
@@ -102,7 +165,11 @@ function BookAppointment() {
       setReason("");
     } catch (err) {
       console.error("Full error details:", err.response?.data || err.message);
-      alert(`Error booking appointment: ${err.response?.data?.message || err.message}`);
+      alert(
+        `Error booking appointment: ${
+          err.response?.data?.message || err.message
+        }`
+      );
     } finally {
       setLoading(false);
     }

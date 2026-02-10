@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+//import axios from "axios";
+import API from "../../../Api";
 
 function DoctorAppointments() {
   const [appointments, setAppointments] = useState([]);
@@ -12,31 +13,65 @@ function DoctorAppointments() {
     fetchAppointments();
   }, [filter, selectedDate]);
 
-  const fetchAppointments = async () => {
+  // const fetchAppointments = async () => {
+  //   try {
+  //     setLoading(true);
+  //     //const token = localStorage.getItem("token");
+      
+  //     //let url = "http://localhost:5000/api/appointments/doctor/my-appointments"; 
+  //     let url = "/api/appointments/doctor/my-appointments";
+
+  //     const params = new URLSearchParams();
+      
+  //     if (filter !== "all") {
+  //       params.append("filter", filter);
+  //     }
+  //     if (selectedDate) {
+  //       params.append("date", selectedDate);
+  //     }
+      
+  //     if (params.toString()) {
+  //       url += `?${params.toString()}`;
+  //     }
+
+  //     // const response = await axios.get(url, {
+  //     //   headers: {
+  //     //     Authorization: `Bearer ${token}`,
+  //     //   },
+  //     // });
+  //     API.get(url);
+      
+  //     setAppointments(response.data);
+  //     setError("");
+  //   } catch (err) {
+  //     console.error("Error fetching appointments:", err);
+  //     setError("Failed to load appointments");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      
-      let url = "http://localhost:5000/api/appointments/doctor/my-appointments"; 
+
+      let url = "/api/appointments/doctor/my-appointments";
+
       const params = new URLSearchParams();
-      
+
       if (filter !== "all") {
         params.append("filter", filter);
       }
       if (selectedDate) {
         params.append("date", selectedDate);
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
 
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
+      // ✅ FIX: store the response
+      const response = await API.get(url);
+
       setAppointments(response.data);
       setError("");
     } catch (err) {
@@ -46,6 +81,7 @@ function DoctorAppointments() {
       setLoading(false);
     }
   };
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();

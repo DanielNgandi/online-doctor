@@ -9,73 +9,112 @@ function DoctorsList({ search }) {
 
     useEffect(() => {
         const fetchDoctors = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+    //         try {
+    //             setLoading(true);
+    //             setError(null);
                 
-                console.log("Fetching doctors with search:", search);
+    //             console.log("Fetching doctors with search:", search);
                 
-                const res = await axios.get(`http://localhost:5000/api/doctors`, {
-                    params: { 
-                        search: search || '' 
-                    }
-                });
+    //             const res = await axios.get(`http://localhost:5000/api/doctors`, {
+    //                 params: { 
+    //                     search: search || '' 
+    //                 }
+    //             });
                 
-                console.log("Doctors response:", res.data);
-                console.log("✅ API Response received:");
-                console.log("📊 Response data type:", typeof res.data);
-                console.log("📊 Is array?", Array.isArray(res.data));
-                console.log("📊 Response data:", res.data); 
+    //             console.log("Doctors response:", res.data);
+    //             console.log("✅ API Response received:");
+    //             console.log("📊 Response data type:", typeof res.data);
+    //             console.log("📊 Is array?", Array.isArray(res.data));
+    //             console.log("📊 Response data:", res.data); 
 
-                  // Check the first doctor's data structure
-                if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-                    console.log("🔬 First doctor details:", {
-                        id: res.data[0].id,
-                        name: res.data[0].name,
-                        avgRating: res.data[0].avgRating,
-                        totalRating: res.data[0].totalRating,
-                        totalPatients: res.data[0].totalPatients,
-                        // List all keys to see what's available
-                        allKeys: Object.keys(res.data[0])
-                    });
+    //               // Check the first doctor's data structure
+    //             if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+    //                 console.log("🔬 First doctor details:", {
+    //                     id: res.data[0].id,
+    //                     name: res.data[0].name,
+    //                     avgRating: res.data[0].avgRating,
+    //                     totalRating: res.data[0].totalRating,
+    //                     totalPatients: res.data[0].totalPatients,
+    //                     // List all keys to see what's available
+    //                     allKeys: Object.keys(res.data[0])
+    //                 });
                     
-                    // Check if we have testimonials data
-                    if (res.data[0].testimonials) {
-                        console.log("📝 First doctor has testimonials:", res.data[0].testimonials);
-                    }
+    //                 // Check if we have testimonials data
+    //                 if (res.data[0].testimonials) {
+    //                     console.log("📝 First doctor has testimonials:", res.data[0].testimonials);
+    //                 }
                     
-                    // Check all doctors for rating data
-                    res.data.forEach((doctor, index) => {
-                        console.log(`👨‍⚕️ Doctor ${index + 1}: ${doctor.name}`, {
-                            avgRating: doctor.avgRating,
-                            totalRating: doctor.totalRating,
-                            hasAvgRating: 'avgRating' in doctor,
-                            hasTotalRating: 'totalRating' in doctor,
-                            ratingFields: {
-                                avgRating: doctor.avgRating,
-                                averageRating: doctor.averageRating,
-                                totalRating: doctor.totalRating,
-                                totalReviews: doctor.totalReviews,
-                                totalRating: doctor.totalRating
-                            }
-                        });
-                    });
-                }
-                setDoctors(res.data);
+    //                 // Check all doctors for rating data
+    //                 res.data.forEach((doctor, index) => {
+    //                     console.log(`👨‍⚕️ Doctor ${index + 1}: ${doctor.name}`, {
+    //                         avgRating: doctor.avgRating,
+    //                         totalRating: doctor.totalRating,
+    //                         hasAvgRating: 'avgRating' in doctor,
+    //                         hasTotalRating: 'totalRating' in doctor,
+    //                         ratingFields: {
+    //                             avgRating: doctor.avgRating,
+    //                             averageRating: doctor.averageRating,
+    //                             totalRating: doctor.totalRating,
+    //                             totalReviews: doctor.totalReviews,
+    //                             totalRating: doctor.totalRating
+    //                         }
+    //                     });
+    //                 });
+    //             }
+    //             setDoctors(res.data);
                 
-            } catch (error) {
-                console.error("Error fetching doctors", error);
-                setError("Failed to load doctors. Please try again.");
-                setDoctors([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+    //         } catch (error) {
+    //             console.error("Error fetching doctors", error);
+    //             setError("Failed to load doctors. Please try again.");
+    //             setDoctors([]);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
         
         
-        fetchDoctors();
+    //     fetchDoctors();
         
-    }, [search]); // This will refetch when search changes
+    // }, [search]); // This will refetch when search changes
+
+     try {
+        setLoading(true);
+        setError(null);
+
+        console.log("Fetching doctors with search:", search);
+
+        const res = await api.get('/api/doctors', {
+          params: { search: search || '' }
+        });
+
+        const data = res?.data || [];
+        console.log("✅ API Response received:", data);
+
+        // Optional: log the first doctor's structure for debugging
+        if (Array.isArray(data) && data.length > 0) {
+          console.log("🔬 First doctor details:", {
+            id: data[0]?.id,
+            name: data[0]?.name,
+            avgRating: data[0]?.avgRating,
+            totalRating: data[0]?.totalRating,
+            totalPatients: data[0]?.totalPatients,
+            allKeys: Object.keys(data[0] || {})
+          });
+        }
+
+        setDoctors(data);
+
+      } catch (err) {
+        console.error("Error fetching doctors:", err);
+        setError("Failed to load doctors. Please try again.");
+        setDoctors([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, [search]);
 
     if (loading) {
         return (
