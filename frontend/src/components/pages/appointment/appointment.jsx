@@ -56,7 +56,7 @@ function BookAppointment() {
   // }, []);
       const checkPatientProfile = async () => {
       try {
-        const response = await API.get("/patient/profile");
+        const response = await API.get("/api/patient/profile");
 
         if (response.data && response.data.id) {
           setPatientId(response.data.id);
@@ -100,7 +100,7 @@ function BookAppointment() {
 
     const fetchDoctors = async () => {
       try {
-        const res = await API.get("/doctors");
+        const res = await API.get("/api/doctors");
         setDoctors(res.data);
       } catch (err) {
         console.error("Error fetching doctors:", err);
@@ -157,7 +157,7 @@ function BookAppointment() {
         reason,
       };
 
-      await API.post("/appointments", data);
+      await API.post("/api/appointments", data);
 
       alert("Appointment booked successfully!");
       setDoctorId("");

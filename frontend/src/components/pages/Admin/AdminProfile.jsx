@@ -56,7 +56,7 @@ function AdminProfile() {
 
  const fetchAdminProfile = async () => {
     try {
-      const response = await API.get("/admin/profile");
+      const response = await API.get("/api/admin/profile");
 
       setAdmin(response.data);
 
@@ -92,7 +92,7 @@ function AdminProfile() {
 //   };
 const fetchAdminStats = async () => {
     try {
-      const response = await API.get("/admin/stats");
+      const response = await API.get("/api/admin/stats");
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching admin stats:", error);
@@ -129,7 +129,7 @@ const fetchAdminStats = async () => {
   // };
   
     try {
-      const response = await API.put("/admin/profile", formData);
+      const response = await API.put("/api/admin/profile", formData);
 
       setAdmin(response.data.admin || response.data);
       setEditing(false);

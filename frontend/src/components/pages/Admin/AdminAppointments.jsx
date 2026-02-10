@@ -67,7 +67,7 @@ const AdminAppointments = () => {
 
       console.log("📡 Fetching appointments with params:", params);
 
-      const response = await API.get("/admin/appointments", { params });
+      const response = await API.get("/api/admin/appointments", { params });
 
       if (response.data?.success) {
         setAppointments(response.data.appointments);
@@ -99,7 +99,7 @@ const AdminAppointments = () => {
   // };
    const fetchStats = async () => {
     try {
-      const response = await API.get("/admin/appointments/stats");
+      const response = await API.get("/api/admin/appointments/stats");
       if (response.data?.success) {
         setStats(response.data.stats);
       }

@@ -58,18 +58,7 @@ function DoctorFeedback({ doctor }) {
 }
   const handleSubmitReview = async (e) => {
   e.preventDefault()
-  
-  console.log('=== FRONTEND DEBUG: SUBMITTING REVIEW ===');
-  console.log('1. User review state:', userReview);
-  console.log('2. Rating value:', userReview.rating, 'Type:', typeof userReview.rating);
-  console.log('3. Comment value:', userReview.comment, 'Length:', userReview.comment.length);
-  console.log('4. Doctor ID from URL:', doctorId);
-  console.log('5. User from context:', user);
-  console.log('6. User ID:', user?.id);
-  console.log('7. User userId:', user?.userId);
-  console.log('8. User role:', user?.role);
-  console.log('9. Token exists:', !!localStorage.getItem('token'));
-  console.log('10. Token:', localStorage.getItem('token')?.substring(0, 20) + '...');
+
   
   if (!user) {
     alert('Please login to submit a review');
