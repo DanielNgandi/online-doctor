@@ -1,6 +1,7 @@
 import DoctorCard from './DoctorCard'
 import { useEffect, useState } from "react";
-import axios from "axios";
+//import axios from "axios";
+import API from '../../Api.js';
 
 function DoctorsList({ search }) {
     const [doctors, setDoctors] = useState([]);
@@ -83,7 +84,7 @@ function DoctorsList({ search }) {
 
         console.log("Fetching doctors with search:", search);
 
-        const res = await api.get('/api/doctors', {
+        const res = await API.get('/api/doctors', {
           params: { search: search || '' }
         });
 

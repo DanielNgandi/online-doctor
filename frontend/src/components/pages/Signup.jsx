@@ -2,7 +2,7 @@ import signupImg from '../../assets/images/signup.svg'
 import avatar from '../../assets/images/avatar-icon.png'
 import {Link} from 'react-router-dom'
 import { useState } from 'react'
-import API from '../../Api'
+import API from '../../Api.js'
 
 function Signup() {
   const [selectedFile,setSelectedFile]=useState(null)

@@ -1,5 +1,5 @@
 // components/Admin/AdminProfile.jsx
-import API from '../../../Api';
+import API from '../../../Api.js';
 import { useState, useEffect } from 'react';
 //import axios from 'axios';
 

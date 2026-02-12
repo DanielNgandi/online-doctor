@@ -6,7 +6,7 @@ import DoctorsAbout from './DoctorsAbout'
 import DoctorFeedback from './DoctorFeedback'
 import SidePanel from './SidePanel'
 //import axios from 'axios'
-import API from '../../../Api'
+import API from '../../../Api.js'
 
 function DoctorsDetail() {
   const [tab, setTab] = useState('about')

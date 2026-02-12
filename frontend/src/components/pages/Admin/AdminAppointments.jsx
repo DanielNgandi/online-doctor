@@ -1,5 +1,5 @@
 // src/components/AdminAppointments.js
-import API from '../../../Api';
+import API from '../../../Api.js';
 import React, { useState, useEffect } from 'react';
 //import axios from 'axios';
 

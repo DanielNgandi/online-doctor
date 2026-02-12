@@ -1,7 +1,8 @@
 // src/components/patients/PatientProfile.jsx
 import { useState, useEffect } from "react";
-import axios from "axios";
+//import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API from "../../../Api.js";
 
 function PatientProfileSetup() {
   const [profile, setProfile] = useState({

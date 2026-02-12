@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+//import axios from "axios";
+import API from "../../../Api.js";
 
 function PatientAppointments() {
   const [appointments, setAppointments] = useState([]);
