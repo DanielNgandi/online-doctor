@@ -6,6 +6,7 @@ import API from '../../Api.js'
 
 function Signup() {
   const [selectedFile,setSelectedFile]=useState(null)
+  const [loading, setLoading] = useState(false);
   const [previewURL,setpreviewURL]=useState('')
   const [formData,setFormData]=useState({
     username:'',
