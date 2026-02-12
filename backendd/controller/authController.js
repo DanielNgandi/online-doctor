@@ -22,7 +22,13 @@ export const register = async (req, res) => {
       },
     });
 
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json({ 
+      message: "User registered successfully", user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -73,15 +79,48 @@ export const registerDoctor = async (req, res) => {
       return { user, doctor };
     });
 
-    // Generate token with doctor ID
+//     // Generate token with doctor ID
+//     const token = jwt.sign(
+//       { 
+//         id: result.doctor.id,        // Doctor ID for doctor routes
+//         userId: result.user.id,      // User ID for reference
+//         role: 'doctor' 
+//       },
+//       process.env.JWT_SECRET || "your_jwt_secret",
+//       { expiresIn: "7d" }
+//     );
+
+//     res.status(201).json({
+//       message: "Doctor registered successfully",
+//       token,
+//       user: {
+//         id: result.doctor.id,
+//         userId: result.user.id,
+//         username: result.user.username,
+//         email: result.user.email,
+//         role: 'doctor',
+//         name: result.doctor.name,
+//         specialty: result.doctor.specialty
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error("Doctor registration error:", error);
+//     res.status(500).json({ message: "Server error during registration" });
+//   }
+// };
+if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
     const token = jwt.sign(
       { 
-        id: result.doctor.id,        // Doctor ID for doctor routes
-        userId: result.user.id,      // User ID for reference
+        id: result.doctor.id,
+        userId: result.user.id,
         role: 'doctor' 
       },
-      process.env.JWT_SECRET || "your_jwt_secret",
-      { expiresIn: "7d" }
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
 
     res.status(201).json({
@@ -112,8 +151,8 @@ export const login = async (req, res) => {
     const user = await prisma.user.findUnique({ 
       where: { email },
       include: {
-        patient: true, // Include patient relation
-        doctor: true   // Include doctor relation
+        patient: true, 
+        doctor: true   
       }
     });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
@@ -123,21 +162,24 @@ export const login = async (req, res) => {
 
     let entityId;
     if (user.role === 'patient' && user.patient) {
-      entityId = user.patient.id; // Use patient ID for patients
+      entityId = user.patient.id; 
     } else if (user.role === 'doctor' && user.doctor) {
-      entityId = user.doctor.id; // Use doctor ID for doctors
+      entityId = user.doctor.id; 
     } else {
-      entityId = user.id; // Fallback to user ID
+      entityId = user.id; 
+    }
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined");
     }
 
     const token = jwt.sign(
       { 
-        id: entityId,        // Use the appropriate entity ID
-        userId: user.id,     // Also include user ID for reference
+        id: entityId,        
+        userId: user.id,     
         role: user.role 
       },
-      process.env.JWT_SECRET || "your_jwt_secret",
-      { expiresIn: "7d" }
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
     );
 
     res.json({ 
