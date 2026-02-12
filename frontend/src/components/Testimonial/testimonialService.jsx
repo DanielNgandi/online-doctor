@@ -1,9 +1,10 @@
 // src/services/testimonialService.js
-import api from './api'
+//import api from './api'
+import API from "../../Api.js"
 
 export const getTestimonials = async (params = {}) => {
   try {
-    const response = await api.get('/testimonials', { params })
+    const response = await API.get('/api/testimonials', { params })
     return response.data
   } catch (error) {
     console.error('Error fetching testimonials:', error)
@@ -13,7 +14,7 @@ export const getTestimonials = async (params = {}) => {
 
 export const submitTestimonial = async (testimonialData) => {
   try {
-    const response = await api.post('/testimonials', testimonialData)
+    const response = await API.post('/api/testimonials', testimonialData)
     return response.data
   } catch (error) {
     console.error('Error submitting testimonial:', error)
@@ -23,7 +24,7 @@ export const submitTestimonial = async (testimonialData) => {
 
 export const getDoctorTestimonials = async (doctorId, params = {}) => {
   try {
-    const response = await api.get(`/testimonials/doctors/${doctorId}`, { params })
+    const response = await API.get(`/api/testimonials/doctors/${doctorId}`, { params })
     return response.data
   } catch (error) {
     console.error('Error fetching doctor testimonials:', error)
