@@ -62,7 +62,8 @@ try {
 
       const res = await API.post('/api/auth/register', payload, {
         headers: {
-          'Content-Type': 'multipart/form-data', // required for file uploads
+           "Content-Type": "application/json",
+          // 'Content-Type': 'multipart/form-data', // required for file uploads
         },
       });
 
